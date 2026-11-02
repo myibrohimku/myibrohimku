@@ -1,14 +1,14 @@
 import { useState } from 'react';
 import { AlertCircle, Loader2 } from 'lucide-react';
 import Button from '../components/ui/Button';
-import { useUnpaidBilling }      from '../hooks/useUnpaidBilling';
-import { useApp }                from '../context/AppContext';
+import { useUnpaidBilling } from '../hooks/useUnpaidBilling';
+import { useApp } from '../context/AppContext';
 import {
   generateTunggakanLandscapePDF,
   generateBulkTunggakanPDF,
 } from '../lib/reportGenerator';
 import UnpaidToolbar from '../components/UnpaidBilling/UnpaidToolbar';
-import UnpaidCard    from '../components/UnpaidBilling/UnpaidCard';
+import UnpaidCard from '../components/UnpaidBilling/UnpaidCard';
 import './UnpaidBilling.css';
 
 export default function UnpaidBilling() {
@@ -38,10 +38,10 @@ export default function UnpaidBilling() {
 
   const getReportSettings = () => ({
     ...reportSettings,
-    categoryLabel:  getCatLabel(),
-    namaAdmin:      waSettings.namaKasir,
-    jabatanAdmin:   waSettings.jabatan,
-    noRekening:     waSettings.noRekening,
+    categoryLabel: getCatLabel(),
+    namaAdmin: waSettings.namaKasir,
+    jabatanAdmin: waSettings.jabatan,
+    noRekening: waSettings.noRekening,
   });
 
   // ── Toggle Expand Card ───────────────────────────────────────────────────
@@ -52,18 +52,18 @@ export default function UnpaidBilling() {
   // ── Pesan WhatsApp ───────────────────────────────────────────────────────
   const buildWAMessage = (santri) => {
     const unpaidItems = santri.months.filter(m => m.isUnpaid);
-    const itemsText   = unpaidItems
+    const itemsText = unpaidItems
       .map(m => `Rp ${m.diff.toLocaleString('id-ID')} Bulan ${m.name}`)
       .join('\n');
-    const catLabel    = getCatLabel();
-    const firstMonth  = unpaidItems[0]?.name || '';
+    const catLabel = getCatLabel();
+    const firstMonth = unpaidItems[0]?.name || '';
 
     return [
       `Assalamu'alaikum wrwb.`,
       ``,
       `Pangapunten nipun bu/pak Mohon Maaf Sebelumnya.`,
       `Kulo ${waSettings.namaKasir}`,
-      `${waSettings.jabatan} Asrama Sayyid Ibrohim Utara.`,
+      `${waSettings.jabatan} ASRAMA SAYYID IBROHIM.`,
       ``,
       `Ingin menyampaikan bahwa tagihan Pembayaran ${catLabel} pada bulan ${firstMonth} atas nama,`,
       santri.nama,
@@ -91,7 +91,7 @@ export default function UnpaidBilling() {
       ``,
       `Pangapunten nipun bu/pak Mohon Maaf Sebelumnya.`,
       `Kulo ${waSettings.namaKasir}`,
-      `${waSettings.jabatan} Asrama Sayyid Ibrohim Utara.`,
+      `${waSettings.jabatan} ASRAMA SAYYID IBROHIM.`,
       ``,
       `Ingin menyampaikan bahwa tagihan Pembayaran ${catLabel} pada bulan ${month.name} atas nama,`,
       santri.nama,
@@ -111,7 +111,7 @@ export default function UnpaidBilling() {
   };
 
   // ── Handlers ─────────────────────────────────────────────────────────────
-  
+
   // BUG FIX: Guard — hanya kirim WA jika memang ada tunggakan
   const handleSendWA = (santri) => {
     if (!santri.no_wa_wali) return alert(`Nomor WA wali ${santri.nama} belum diisi.`);
