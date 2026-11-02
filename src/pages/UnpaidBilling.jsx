@@ -97,7 +97,7 @@ export default function UnpaidBilling() {
       `*${(santri.nama || '').toUpperCase()}*`,
       `Sejumlah,`,
       `Rp ${month.diff.toLocaleString('id-ID')} ${month.name}`,
-      '=======================================',
+      '================================',
       `*Total = Rp ${month.diff.toLocaleString('id-ID')}*`,
       ``,
       `Untuk pembayaran dapat dilakukan via Transfer atau langsung.`,
