@@ -554,7 +554,7 @@ export default function Settings() {
                     Kulo <span style={{ color: '#007bff', fontWeight: 'bold' }}>{waForm.namaKasir || '[Nama Kasir]'}</span>{"\n"}
                     <span style={{ color: '#007bff', fontWeight: 'bold' }}>{waForm.jabatan || '[Jabatan]'}</span> Asrama Sayyid Ibrohim Utara.{"\n\n"}
                     Ingin menyampaikan bahwa tagihan Pembayaran Laundry [Kategori] pada bulan Mei 2026 atas nama,{"\n"}
-                    A. Abdur Rofi [Nama]{"\n"}
+                    <span style={{ fontWeight: 'bold' }}>*A. ABDUR ROFI*</span> [Nama]{"\n"}
                     Sejumlah,{"\n"}
                     Rp 40.000 [Nominal] Bulan Mei [Bulan]{"\n"}
                     ----------------------------------------{"\n"}

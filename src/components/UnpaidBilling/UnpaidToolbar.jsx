@@ -21,27 +21,27 @@ export default function UnpaidToolbar({
     <div className="page-header">
       <div className="page-header__main">
         <div>
-          <h1 className="page-title">Monitoring Tagihan</h1>
+          <h1 className="page-title">Daftar Tagihan Bulanan Santri</h1>
           <p className="page-subtitle">Kelola dan pantau status pembayaran santri</p>
         </div>
       </div>
 
-      
+
       <div className="search-filter-bar mt-4">
         <div className="search-input-wrapper">
           <Search className="search-icon" size={18} />
-          <input 
+          <input
             ref={inputRef}
             id="unpaid-search"
-            type="text" 
-            placeholder="Cari Nama, NIA, Kamar, Bulan (Jan), atau Status (Lunas/Belum)..." 
+            type="text"
+            placeholder="Cari Nama, NIA, Kamar, Bulan (Jan), atau Status (Lunas/Belum)..."
             className="search-input"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
-        <Button 
-          variant="primary" 
+        <Button
+          variant="primary"
           onClick={handlePrintBulkPDF}
           title="Cetak Laporan PDF Hasil Pencarian"
           style={{ whiteSpace: 'nowrap' }}
