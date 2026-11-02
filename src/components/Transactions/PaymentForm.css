@@ -1,0 +1,356 @@
+/* PaymentForm.css */
+
+.payment-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+  padding: var(--sp-6);
+  animation: fadeInUp 300ms ease forwards;
+}
+
+.payment-form__title {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.payment-form__title-left {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+}
+
+.payment-form__close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--r-3);
+  border: none;
+  background: transparent;
+  color: var(--text-tertiary);
+  cursor: pointer;
+}
+
+.payment-form__close:hover {
+  background: var(--surface-secondary);
+  color: var(--text-primary);
+}
+
+.payment-form__title-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--r-4);
+  background: var(--green-200);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+.payment-form__fields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}
+
+.payment-form__jenis-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  margin-top: var(--sp-2);
+}
+
+.payment-form__jenis-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: 6px 12px;
+  border-radius: var(--r-full);
+  background: var(--primary-100);
+  color: var(--primary-400);
+  font-size: 0.8rem;
+  font-weight: 600;
+  border: 1px solid var(--primary-200);
+}
+
+[data-theme="dark"] .payment-form__jenis-chip {
+  background: rgba(255, 122, 48, 0.12);
+  border-color: rgba(255, 122, 48, 0.25);
+  color: var(--primary-300);
+}
+
+.payment-form__jenis-chip-remove {
+  display: flex;
+  cursor: pointer;
+  color: var(--primary-300);
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+.payment-form__nominal-entry {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  background: var(--surface-secondary);
+  border-radius: var(--r-4);
+  border: 1px solid var(--border-secondary);
+}
+
+.payment-form__nominal-entry-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  min-width: 100px;
+  padding-bottom: 10px;
+}
+
+.payment-form__sumber-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.payment-form__sumber-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.payment-form__sumber-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+
+.payment-form__sumber-btn {
+  padding: 8px 16px;
+  border-radius: var(--r-full);
+  border: 1.5px solid var(--border-primary);
+  background: var(--surface-primary);
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: none;
+}
+
+.payment-form__sumber-btn:focus {
+  outline: none;
+}
+
+.payment-form__sumber-btn--active {
+  border-color: var(--primary-300);
+  background: var(--primary-300);
+  color: white;
+  font-weight: 700;
+}
+
+[data-theme="dark"] .payment-form__sumber-btn:hover {
+  background: var(--surface-secondary);
+}
+
+[data-theme="dark"] .payment-form__sumber-btn--active {
+  background: var(--primary-300);
+  border-color: var(--primary-300);
+  color: white;
+}
+
+.payment-form__custom-input {
+  margin-top: var(--sp-2);
+}
+
+.payment-form__input-text {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: var(--r-4);
+  border: 1.5px solid var(--border-primary);
+  background: var(--surface-primary);
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  font-family: inherit;
+  transition: all var(--transition-fast);
+  outline: none;
+}
+
+.payment-form__input-text:focus {
+  border-color: var(--primary-300);
+  box-shadow: 0 0 0 3px rgba(255, 92, 2, 0.12);
+}
+
+[data-theme="dark"] .payment-form__input-text:focus {
+  box-shadow: 0 0 0 3px rgba(255, 122, 48, 0.18);
+  background: var(--neutral-200);
+}
+
+.payment-form__metode-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.payment-form__metode-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.payment-form__metode-toggle {
+  display: flex;
+  border: 1.5px solid var(--border-primary);
+  border-radius: var(--r-4);
+  overflow: hidden;
+  width: fit-content;
+}
+
+.payment-form__metode-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: 10px 24px;
+  border: none;
+  background: var(--surface-primary);
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: none;
+}
+
+.payment-form__metode-btn:first-child {
+  border-right: 1px solid var(--border-primary);
+}
+
+.payment-form__metode-btn:focus {
+  outline: none;
+}
+
+.payment-form__metode-btn--active {
+  background: var(--primary-300);
+  color: white;
+  font-weight: 700;
+}
+
+[data-theme="dark"] .payment-form__metode-btn:hover:not(.payment-form__metode-btn--active) {
+  background: var(--surface-secondary);
+}
+
+.payment-form__footer {
+  display: flex;
+  gap: var(--sp-4);
+  padding-top: var(--sp-4);
+  border-top: 1px solid var(--border-secondary);
+}
+
+/* ── Year Selector ── */
+.payment-form__year-selector {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  background: var(--surface-secondary);
+  border-radius: var(--r-4);
+  border: 1px solid var(--border-secondary);
+}
+
+.payment-form__year-label {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.payment-form__year-badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--yellow-300);
+  background: var(--yellow-100);
+  padding: 2px 8px;
+  border-radius: var(--r-full);
+  border: 1px solid var(--yellow-200);
+}
+
+.payment-form__year-control {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.payment-form__year-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--r-2);
+  border: 1.5px solid var(--border-primary);
+  background: var(--surface-primary);
+  color: var(--text-secondary);
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  padding: 0;
+}
+
+.payment-form__year-btn:hover:not(:disabled) {
+  background: var(--primary-100);
+  border-color: var(--primary-200);
+  color: var(--primary-400);
+}
+
+.payment-form__year-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.payment-form__year-value {
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--primary-400);
+  min-width: 48px;
+  text-align: center;
+}
+
+.payment-form__year-reset {
+  padding: 4px 10px;
+  border-radius: var(--r-full);
+  border: 1.5px solid var(--primary-200);
+  background: var(--primary-100);
+  color: var(--primary-400);
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.payment-form__year-reset:hover {
+  background: var(--primary-200);
+}
+
+[data-theme="dark"] .payment-form__year-reset {
+  background: rgba(255, 122, 48, 0.15);
+  border-color: rgba(255, 122, 48, 0.3);
+  color: var(--primary-300);
+}
+
+[data-theme="dark"] .payment-form__year-btn {
+  background: var(--surface-primary);
+  border-color: var(--neutral-400);
+}
+
+[data-theme="dark"] .payment-form__year-btn:hover:not(:disabled) {
+  background: rgba(255, 122, 48, 0.15);
+  border-color: var(--primary-300);
+  color: var(--primary-300);
+}

@@ -1,0 +1,169 @@
+.card {
+  background: var(--surface-primary);
+  border-radius: var(--r-6);
+  border: 1px solid var(--border-secondary);
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-fast);
+  position: relative;
+  overflow: visible !important;
+}
+
+.card--padded {
+  padding: var(--sp-6);
+}
+
+.card--hover:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+/* ── StatCard ── */
+.stat-card {
+  position: relative;
+  overflow: visible !important;
+  z-index: 1;
+  transition: z-index 0s;
+}
+
+.stat-card:has(.dropdown--open) {
+  z-index: 50;
+}
+
+.stat-card__bg {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.stat-card > *:not(.stat-card__bg) {
+  position: relative;
+  z-index: 1;
+  overflow: visible;
+}
+
+/* Orb glow — opacity dikontrol per theme */
+.stat-card__bg::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 130px;
+  height: 130px;
+  border-radius: 50%;
+  opacity: 0.07;
+  transform: translate(30%, -30%);
+  transition: opacity var(--transition-normal);
+}
+
+.stat-card--primary .stat-card__bg::after { background: var(--primary-300); }
+.stat-card--secondary .stat-card__bg::after { background: var(--secondary-300); }
+.stat-card--green .stat-card__bg::after { background: var(--green-200); }
+.stat-card--red .stat-card__bg::after { background: var(--red-200); }
+
+/* Dark mode — orb lebih terang agar terlihat pada dark surface */
+[data-theme="dark"] .stat-card__bg::after {
+  opacity: 0.18;
+}
+
+.stat-card__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: var(--sp-3);
+}
+
+.stat-card__info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.stat-card__title {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.stat-card__icon {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--r-6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Light mode icon backgrounds */
+.stat-card__icon--primary {
+  background: var(--primary-100);
+  color: var(--primary-300);
+}
+
+.stat-card__icon--secondary {
+  background: var(--secondary-100);
+  color: var(--secondary-300);
+}
+
+.stat-card__icon--green {
+  background: var(--green-100);
+  color: var(--green-200);
+}
+
+.stat-card__icon--red {
+  background: var(--red-100);
+  color: var(--red-200);
+}
+
+/* Dark mode icon — gunakan token yang sudah disesuaikan otomatis */
+[data-theme="dark"] .stat-card__icon--primary {
+  background: rgba(255, 122, 48, 0.15);
+  color: var(--primary-300);
+}
+
+[data-theme="dark"] .stat-card__icon--secondary {
+  background: rgba(124, 77, 255, 0.15);
+  color: var(--secondary-300);
+}
+
+[data-theme="dark"] .stat-card__icon--green {
+  background: rgba(74, 222, 128, 0.12);
+  color: var(--green-200);
+}
+
+[data-theme="dark"] .stat-card__icon--red {
+  background: rgba(248, 113, 113, 0.12);
+  color: var(--red-200);
+}
+
+.stat-card__value {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.stat-card__trend {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  margin-top: var(--sp-2);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.stat-card__trend--up {
+  color: var(--green-200);
+}
+
+.stat-card__trend--down {
+  color: var(--red-200);
+}
+
+.stat-card__trend-label {
+  color: var(--text-tertiary);
+  font-weight: 400;
+}

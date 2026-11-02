@@ -1,0 +1,199 @@
+/* DompetForm.css */
+
+.dompet-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+  padding: var(--sp-6);
+  animation: fadeInUp 300ms ease forwards;
+}
+
+.dompet-form__title {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.dompet-form__title-left {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+}
+
+.dompet-form__close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--r-3);
+  border: none;
+  background: transparent;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.dompet-form__close:hover {
+  background: var(--surface-secondary);
+  color: var(--text-primary);
+}
+
+.dompet-form__title-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--r-4);
+  background: var(--red-200);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+.dompet-form__fields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}
+
+/* Text input with memory */
+.dompet-form__text-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+}
+
+.dompet-form__text-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.dompet-form__text-wrap {
+  position: relative;
+}
+
+.dompet-form__text-input {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: var(--r-4);
+  border: 1.5px solid var(--border-primary);
+  background: var(--surface-primary);
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  font-family: inherit;
+  transition: all var(--transition-fast);
+  outline: none;
+}
+
+.dompet-form__text-input:focus {
+  border-color: var(--primary-300);
+  box-shadow: 0 0 0 3px rgba(255, 92, 2, 0.12);
+}
+
+.dompet-form__text-input--textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+.dompet-form__text-memory {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.7rem;
+  color: var(--text-tertiary);
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+/* Sumber Dana Picker */
+.dompet-form__sumber-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.dompet-form__sumber-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.dompet-form__sumber-info {
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+  font-style: italic;
+}
+
+.dompet-form__sumber-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+
+.dompet-form__sumber-chip {
+  display: flex;
+  flex-direction: column;
+  padding: 10px 16px;
+  border-radius: var(--r-4);
+  border: 1.5px solid var(--border-primary);
+  background: var(--surface-primary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  min-width: 100px;
+  font-family: inherit;
+  text-align: left;
+}
+
+.dompet-form__sumber-chip:focus {
+  outline: none;
+}
+
+.dompet-form__sumber-chip:hover {
+  border-color: var(--primary-200);
+  background: var(--primary-100);
+}
+
+.dompet-form__sumber-chip--active {
+  border-color: var(--primary-300);
+  background: var(--primary-100);
+  box-shadow: 0 0 0 2px rgba(255, 92, 2, 0.15);
+}
+
+.dompet-form__sumber-chip--disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.dompet-form__sumber-chip-name {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.dompet-form__sumber-chip-balance {
+  font-size: 0.7rem;
+  color: var(--green-300);
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+.dompet-form__sumber-chip-empty {
+  font-size: 0.7rem;
+  color: var(--red-200);
+  font-weight: 500;
+  margin-top: 2px;
+}
+
+/* Footer */
+.dompet-form__footer {
+  display: flex;
+  gap: var(--sp-4);
+  padding-top: var(--sp-4);
+  border-top: 1px solid var(--border-secondary);
+}

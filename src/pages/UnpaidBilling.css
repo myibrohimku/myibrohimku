@@ -1,0 +1,333 @@
+.page-header {
+  margin-bottom: var(--sp-6);
+}
+
+.page-header__main {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--sp-4);
+}
+
+.page-header__actions {
+  display: flex;
+  gap: var(--sp-3);
+  align-items: center;
+}
+
+.search-filter-bar {
+  display: flex;
+  gap: var(--sp-4);
+  background: var(--surface-primary);
+  padding: var(--sp-3) var(--sp-4);
+  border-radius: var(--r-4);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-secondary);
+  width: 100%;
+}
+
+.search-input-wrapper {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+.search-icon {
+  position: absolute;
+  left: var(--sp-3);
+  color: var(--text-tertiary);
+}
+
+.search-input {
+  width: 100%;
+  padding: var(--sp-2) var(--sp-3) var(--sp-2) var(--sp-10);
+  border: 1px solid var(--border-secondary);
+  border-radius: var(--r-3);
+  background: var(--surface-secondary);
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: var(--primary-300);
+  background: var(--surface-primary);
+  box-shadow: 0 0 0 3px rgba(255, 92, 2, 0.08);
+}
+
+[data-theme="dark"] .search-input:focus {
+  box-shadow: 0 0 0 3px rgba(255, 122, 48, 0.15);
+}
+
+.unpaid__loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--sp-12) 0;
+  color: var(--text-tertiary);
+  gap: var(--sp-4);
+}
+
+.unpaid__empty {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: var(--sp-12);
+}
+
+.unpaid__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: var(--sp-4);
+}
+
+.unpaid-card {
+  transition: all var(--transition-normal);
+  border-left: 4px solid var(--red-200);
+  position: relative;
+}
+
+[data-theme="dark"] .unpaid-card {
+  border-left-color: var(--red-200);
+}
+
+[data-theme="dark"] .unpaid-card__details {
+  background: var(--neutral-200);
+}
+
+.unpaid-card:focus-within {
+  z-index: 5;
+}
+
+.unpaid-card--expanded {
+  box-shadow: var(--shadow-lg);
+  transform: scale(1.02);
+  z-index: 10;
+}
+
+.unpaid-card__main {
+  padding: var(--sp-5);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  gap: var(--sp-3);
+}
+
+.unpaid-card__info {
+  flex: 1;
+  min-width: 0;
+}
+
+.unpaid-card__header {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-2);
+}
+
+.unpaid-card__name {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.unpaid-card__amount {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-2);
+}
+
+.unpaid-card__total-label {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+}
+
+.unpaid-card__total-value {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--red-200);
+}
+
+.unpaid-card__chevron {
+  color: var(--text-tertiary);
+}
+
+.unpaid-card__details {
+  padding: 0 var(--sp-5) var(--sp-5);
+  border-top: 1px solid var(--border-secondary);
+  background: var(--surface-secondary);
+  border-radius: 0 0 var(--r-6) var(--r-6);
+}
+
+.unpaid-card__item-list {
+  padding: var(--sp-4) 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.unpaid-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--sp-2) 0;
+}
+
+.unpaid-item__label {
+  display: flex;
+  flex-direction: column;
+}
+
+.unpaid-item__cat {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.unpaid-item__month {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.unpaid-item__price {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+/* 12-Month Grid */
+.unpaid-card__month-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: var(--sp-2);
+  padding: var(--sp-4) 0;
+}
+
+.month-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--sp-2);
+  border-radius: var(--r-2);
+  background: var(--surface-primary);
+  border: 1px solid var(--border-secondary);
+  transition: all 0.2s;
+}
+
+.month-cell--paid {
+  border-color: var(--green-200);
+  background: var(--green-100);
+}
+
+.month-cell--unpaid {
+  border-color: var(--red-200);
+  background: var(--red-100);
+}
+
+[data-theme="dark"] .month-cell {
+  background: var(--neutral-300);
+  border-color: var(--neutral-400);
+}
+
+[data-theme="dark"] .month-cell--paid {
+  border-color: var(--green-200);
+  background: rgba(74, 222, 128, 0.1);
+}
+
+[data-theme="dark"] .month-cell--unpaid {
+  border-color: var(--red-200);
+  background: rgba(248, 113, 113, 0.1);
+}
+
+.month-cell__label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  margin-bottom: 2px;
+}
+
+.month-cell--paid .month-cell__label { color: var(--green-200); }
+.month-cell--unpaid .month-cell__label { color: var(--red-200); }
+
+.month-cell__status {
+  font-size: 0.6rem;
+  font-weight: 600;
+}
+
+.unpaid-card__footer {
+  margin-top: var(--sp-4);
+  padding-top: var(--sp-4);
+  border-top: 1px dashed var(--border-secondary);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.unpaid-card__footer-total {
+  display: flex;
+  flex-direction: column;
+}
+
+.unpaid-card__footer-label {
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+}
+
+.unpaid-card__footer-value {
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.unpaid-card__actions {
+  display: flex;
+  gap: var(--sp-2);
+  margin-top: var(--sp-4);
+}
+
+.unpaid-card__actions button {
+  flex: 1;
+}
+
+@media (max-width: 768px) {
+  .page-header__main {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .page-header__actions {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    gap: var(--sp-2);
+  }
+  .page-header__actions > * {
+    flex: 1;
+    min-width: 0;
+  }
+  .page-header__actions .dropdown {
+    width: 100%;
+  }
+}
+
+
+@media (max-width: 480px) {
+  .unpaid__grid {
+    grid-template-columns: 1fr;
+  }
+  .unpaid-card__month-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}

@@ -1,0 +1,117 @@
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+}
+
+.input-group__label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.input-group__required {
+  color: var(--red-200);
+  margin-left: 2px;
+}
+
+.input-group__wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-group__input {
+  width: 100%;
+  padding: var(--sp-2) var(--sp-3);
+  height: 40px;
+  border: 1.5px solid var(--border-primary);
+  border-radius: var(--r-4);
+  background: var(--surface-primary);
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  transition: all var(--transition-fast);
+  outline: none;
+}
+
+.input-group__input::placeholder {
+  color: var(--text-tertiary);
+}
+
+.input-group__input:focus {
+  border-color: var(--primary-300);
+  box-shadow: 0 0 0 3px rgba(255, 92, 2, 0.1);
+}
+
+[data-theme="dark"] .input-group__input:focus {
+  box-shadow: 0 0 0 3px rgba(255, 122, 48, 0.18);
+  background: var(--neutral-200);
+}
+
+.input-group__input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background: var(--surface-secondary);
+}
+
+.input-group__input--icon-left {
+  padding-left: var(--sp-10);
+}
+
+.input-group__input--icon-right {
+  padding-right: var(--sp-10);
+}
+
+.input-group__icon-left {
+  position: absolute;
+  left: var(--sp-3);
+  color: var(--text-tertiary);
+  display: flex;
+  pointer-events: none;
+}
+
+.input-group__icon-right {
+  position: absolute;
+  right: var(--sp-3);
+  color: var(--text-tertiary);
+  display: flex;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: var(--sp-1);
+  border-radius: var(--r-2);
+  transition: color var(--transition-fast);
+}
+
+.input-group__icon-right:hover {
+  color: var(--text-primary);
+}
+
+.input-group--error .input-group__input {
+  border-color: var(--red-200);
+}
+
+.input-group--error .input-group__input:focus {
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.input-group__error {
+  font-size: 0.78rem;
+  color: var(--red-200);
+}
+
+.input-group__wrapper--shake {
+  animation: shake 300ms cubic-bezier(.36,.07,.19,.97) both;
+}
+
+.input-group__wrapper--shake .input-group__input {
+  border-color: var(--red-200);
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
+}
+
+@keyframes shake {
+  10%, 90% { transform: translate3d(-1px, 0, 0); }
+  20%, 80% { transform: translate3d(2px, 0, 0); }
+  30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+  40%, 60% { transform: translate3d(4px, 0, 0); }
+}

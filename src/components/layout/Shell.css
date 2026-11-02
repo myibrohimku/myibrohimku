@@ -1,0 +1,88 @@
+.shell {
+  height: 100vh; /* Fallback for older browsers */
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.shell__body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+
+.shell__main {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: auto;
+  padding: var(--sp-8);
+  background: var(--surface-secondary);
+  transition: margin-left var(--transition-normal);
+  min-height: 0;
+  min-width: 0;
+}
+
+.shell__overlay {
+  position: fixed;
+  inset: 0;
+  top: var(--navbar-height);
+  background: var(--surface-overlay);
+  z-index: 40;
+  animation: fadeIn var(--transition-fast) ease;
+}
+
+@media (max-width: 767px) {
+  .shell__main {
+    padding: var(--sp-4);
+    margin-left: 0 !important;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1024px) {
+  .shell__main {
+    padding: var(--sp-6);
+  }
+}
+
+/* ── Floating Action Button (Mobile) ── */
+.shell__fab {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 60px;
+  border-radius: var(--r-full);
+  background: linear-gradient(135deg, var(--primary-300), var(--primary-400));
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 16px rgba(255, 92, 2, 0.4);
+  z-index: 60;
+  transition: all var(--transition-fast);
+  border: 4px solid var(--surface-primary);
+}
+
+[data-theme="dark"] .shell__fab {
+  box-shadow: 0 4px 20px rgba(255, 122, 48, 0.55);
+  border-color: var(--neutral-100);
+}
+
+.shell__fab:hover {
+  transform: translateX(-50%) scale(1.05);
+  background: linear-gradient(135deg, var(--primary-400), var(--primary-500));
+}
+
+.shell__fab:active {
+  transform: translateX(-50%) scale(0.95);
+}
+
+@media (max-width: 767px) {
+  .shell__main {
+    /* Tambahkan ruang bawah di mobile agar konten tidak tertutup BottomNav dan FAB */
+    padding-bottom: 80px; 
+  }
+}

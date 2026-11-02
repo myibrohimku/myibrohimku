@@ -1,0 +1,137 @@
+.transaction-upload {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}
+
+.maintenance-warning {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  background: var(--primary-50);
+  color: var(--primary-700);
+  border: 1px solid var(--primary-200);
+  border-radius: var(--r-3);
+  margin-bottom: var(--sp-4);
+}
+
+.maintenance-warning p {
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin: 0;
+}
+
+.warning-icon {
+  flex-shrink: 0;
+}
+
+.upload-actions {
+  display: flex;
+  gap: var(--sp-4);
+  align-items: center;
+  padding: var(--sp-6);
+  background: var(--surface-secondary);
+  border-radius: var(--r-4);
+  border: 1px dashed var(--border-primary);
+}
+
+.file-input-wrapper {
+  position: relative;
+  flex: 1;
+}
+
+.file-input-wrapper input {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.error-logs {
+  padding: var(--sp-4);
+  background: #fef2f2;
+  border: 1px solid #fee2e2;
+  border-radius: var(--r-3);
+  color: #b91c1c;
+}
+
+.error-logs ul {
+  list-style: disc;
+  padding-left: var(--sp-6);
+  font-size: 0.85rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px var(--sp-6);
+}
+
+.preview-title {
+  font-weight: 700;
+  margin-bottom: var(--sp-3);
+  font-size: 1rem;
+}
+
+.preview-table-container {
+  max-height: 350px;
+  overflow-y: auto;
+  border: 1px solid var(--border-primary);
+  border-radius: var(--r-3);
+}
+
+.preview-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.preview-table th {
+  position: sticky;
+  top: 0;
+  background: var(--surface-secondary);
+  padding: 12px;
+  text-align: left;
+  font-weight: 600;
+  border-bottom: 2px solid var(--border-primary);
+  z-index: 10;
+}
+
+.preview-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border-secondary);
+}
+
+.row-error {
+  background: #fff1f2;
+}
+
+.row-error td {
+  color: #e11d48;
+}
+
+.upload-preview {
+  animation: slideDown 0.3s ease-out;
+}
+
+@media (max-width: 600px) {
+  .upload-actions {
+    flex-direction: column;
+    padding: var(--sp-4);
+  }
+
+  .upload-actions button,
+  .file-input-wrapper {
+    width: 100%;
+  }
+
+  .preview-table {
+    min-width: 600px;
+  }
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}

@@ -1,0 +1,517 @@
+import { useState, useEffect, useMemo, useCallback } from 'react';
+import { Save, RefreshCcw, Users, ChevronDown, ChevronLeft } from 'lucide-react';
+import Button from '../ui/Button';
+import NominalInput from '../ui/NominalInput';
+import Badge from '../ui/Badge';
+import { supabase } from '../../lib/supabaseClient';
+import './NominalSettings.css';
+
+/**
+ * NominalSettings — Settings tab for managing per-santri nominal amounts.
+ */
+export default function NominalSettings({ highlightedPrefix, onBack }) {
+  const [tahun, setTahun] = useState(new Date().getFullYear());
+  const [mode, setMode] = useState('all'); // 'all' | 'individual'
+  const [santriList, setSantriList] = useState([]);
+  const [selectedSantriIds, setSelectedSantriIds] = useState([]);
+  const [jenisBayar, setJenisBayar] = useState([]);
+  const [nominals, setNominals] = useState({}); // { prefix: { isDetail: bool, global: num, months: { 1: num, ... } } }
+  const [selectedMonths, setSelectedMonths] = useState([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]);
+  const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [searchSantri, setSearchSantri] = useState('');
+
+  const MONTHS = [
+    { id: 1, label: 'Jan' }, { id: 2, label: 'Feb' }, { id: 3, label: 'Mar' },
+    { id: 4, label: 'Apr' }, { id: 5, label: 'Mei' }, { id: 6, label: 'Jun' },
+    { id: 7, label: 'Jul' }, { id: 8, label: 'Agu' }, { id: 9, label: 'Sep' },
+    { id: 10, label: 'Okt' }, { id: 11, label: 'Nov' }, { id: 12, label: 'Des' }
+  ];
+
+  // Fetch master data
+  useEffect(() => {
+    const fetch = async () => {
+      setLoading(true);
+      try {
+        const { data: santri } = await supabase
+          .from('databasesantri')
+          .select(`
+            id, 
+            nia, 
+            nama, 
+            kamar,
+            status,
+            ref_kamar(nama_kamar), 
+            ref_status_santri(nama_status),
+            ref_kategori:ref_kategori_datasantri!kategori(nama_kategori)
+          `)
+          .eq('is_deleted', false)
+          .order('nama');
+        if (santri) setSantriList(santri);
+
+        const { data: jenis } = await supabase
+          .from('ref_transak_bln')
+          .select('id_transak_bln, label_transak_bln')
+          .order('id_transak_bln');
+        if (jenis) setJenisBayar(jenis);
+      } catch (err) {
+        console.error('Error:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetch();
+  }, []);
+
+  // Fetch existing data for current settings
+  useEffect(() => {
+    const fetchExisting = async () => {
+      // If individual mode but no santri selected, clear nominals
+      if (mode === 'individual' && selectedSantriIds.length === 0) {
+        setNominals({});
+        return;
+      }
+
+      // Determine target santri to sample from
+      let sampleSantriId = null;
+      if (mode === 'individual') {
+        sampleSantriId = selectedSantriIds[0];
+      } else {
+        // In 'all' mode, we pick a sample from the database for this year
+        const { data: sample } = await supabase
+          .from('nominal_santri')
+          .select('santri_id')
+          .eq('tahun', tahun)
+          .limit(1);
+        if (sample?.[0]) sampleSantriId = sample[0].santri_id;
+      }
+
+      if (!sampleSantriId) {
+        setNominals({});
+        return;
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from('nominal_santri')
+          .select('jenis_bayar, nominal')
+          .eq('santri_id', sampleSantriId)
+          .eq('tahun', tahun);
+
+        if (error) throw error;
+
+        // Map database records back to the UI state structure
+        const newNominals = {};
+        data.forEach(row => {
+          const prefix = row.jenis_bayar.replace(/\d+$/, '');
+          const month = parseInt(row.jenis_bayar.slice(-2));
+
+          if (!newNominals[prefix]) {
+            newNominals[prefix] = { isDetail: false, global: 0, months: {} };
+          }
+
+          newNominals[prefix].months[month] = row.nominal;
+
+          // Heuristic: if all months have same value, we can show it in global mode
+          newNominals[prefix].global = row.nominal;
+        });
+
+        // Refine: check if it should be in detail mode (if values differ)
+        Object.keys(newNominals).forEach(prefix => {
+          const vals = Object.values(newNominals[prefix].months);
+          if (vals.length > 1) {
+            const firstVal = vals[0];
+            const isDifferent = vals.some(v => v !== firstVal);
+            if (isDifferent) {
+              newNominals[prefix].isDetail = true;
+            }
+          }
+        });
+
+        setNominals(newNominals);
+      } catch (err) {
+        console.error('Error fetching existing nominals:', err);
+      }
+    };
+
+    fetchExisting();
+  }, [tahun, mode, selectedSantriIds]);
+
+  // Auto-scroll to highlighted category
+  useEffect(() => {
+    if (highlightedPrefix) {
+      setTimeout(() => {
+        const element = document.getElementById(`cat-${highlightedPrefix}`);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 100);
+    }
+  }, [highlightedPrefix]);
+
+  // Group jenis by prefix (ld, ks, gl, etc.)
+  const categories = useMemo(() => {
+    const cats = {};
+    jenisBayar.forEach(j => {
+      const prefix = j.id_transak_bln.replace(/\d+$/, '');
+      if (!cats[prefix]) {
+        const parts = j.label_transak_bln.split(' ');
+        cats[prefix] = {
+          prefix,
+          label: parts.slice(0, -1).join(' ') || parts[0],
+          items: [],
+        };
+      }
+      cats[prefix].items.push(j);
+    });
+    return Object.values(cats);
+  }, [jenisBayar]);
+
+  // Filtered santri for search
+  const filteredSantri = useMemo(() => {
+    if (!searchSantri.trim()) return santriList;
+
+    const q = searchSantri.toLowerCase();
+    const qNoSpace = q.replace(/\s+/g, '');
+    const keywords = q.split(/[,\s]+/).filter(k => k.trim() !== '');
+
+    return santriList.filter(s => {
+      const cleanKamarName = (s.ref_kamar?.nama_kamar || s.kamar || '').replace(/^kamar\s+/i, '');
+
+      const searchFields = [
+        s.nia,
+        s.nama,
+        cleanKamarName,
+        s.status,
+        s.ref_status_santri?.nama_status,
+        s.ref_kategori?.nama_kategori,
+      ].filter(Boolean);
+
+      const combinedText = searchFields.join(' ').toLowerCase();
+      const combinedNoSpace = searchFields.join('').toLowerCase().replace(/\s+/g, '');
+
+      const matchKeywords = keywords.every(keyword => combinedText.includes(keyword));
+      const matchFuzzy = combinedNoSpace.includes(qNoSpace);
+
+      return matchKeywords || matchFuzzy;
+    });
+  }, [santriList, searchSantri]);
+
+  const toggleSantri = (id) => {
+    setSelectedSantriIds(prev =>
+      prev.includes(id) ? prev.filter(s => s !== id) : [...prev, id]
+    );
+  };
+
+  const selectAllSantri = () => {
+    if (selectedSantriIds.length === santriList.length) {
+      setSelectedSantriIds([]);
+    } else {
+      setSelectedSantriIds(santriList.map(s => s.id));
+    }
+  };
+
+  const toggleMonth = (id) => {
+    setSelectedMonths(prev =>
+      prev.includes(id) ? prev.filter(m => m !== id) : [...prev, id]
+    );
+  };
+
+  const handleNominalChange = (prefix, value, monthId = null) => {
+    setNominals(prev => {
+      const current = prev[prefix] || { isDetail: false, global: 0, months: {} };
+      if (monthId === null) {
+        return { ...prev, [prefix]: { ...current, global: value } };
+      } else {
+        return {
+          ...prev,
+          [prefix]: {
+            ...current,
+            months: { ...current.months, [monthId]: value }
+          }
+        };
+      }
+    });
+  };
+
+  const toggleDetailMode = (prefix) => {
+    setNominals(prev => {
+      const current = prev[prefix] || { isDetail: false, global: 0, months: {} };
+      const newMonths = { ...current.months };
+      if (!current.isDetail) {
+        MONTHS.forEach(m => {
+          if (newMonths[m.id] === undefined) newMonths[m.id] = current.global;
+        });
+      }
+      return { ...prev, [prefix]: { ...current, isDetail: !current.isDetail, months: newMonths } };
+    });
+  };
+
+  const handleSave = async () => {
+    const targetSantriIds = mode === 'all'
+      ? santriList.map(s => s.id)
+      : selectedSantriIds;
+
+    if (targetSantriIds.length === 0) {
+      alert('Pilih minimal satu santri!');
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const records = [];
+      for (const santriId of targetSantriIds) {
+        for (const cat of categories) {
+          const config = nominals[cat.prefix];
+          if (!config) continue;
+
+          for (const item of cat.items) {
+            const itemMonth = parseInt(item.id_transak_bln.slice(-2));
+            let finalNominal = 0;
+
+            if (config.isDetail) {
+              finalNominal = config.months[itemMonth] || 0;
+            } else {
+              if (!selectedMonths.includes(itemMonth)) continue;
+              finalNominal = config.global || 0;
+            }
+
+            records.push({
+              santri_id: santriId,
+              jenis_bayar: item.id_transak_bln,
+              nominal: finalNominal,
+              tahun,
+            });
+          }
+        }
+      }
+
+      if (records.length === 0) {
+        alert('Tidak ada perubahan yang dideteksi.');
+        setSaving(false);
+        return;
+      }
+
+      const BATCH = 500;
+      for (let i = 0; i < records.length; i += BATCH) {
+        const batch = records.slice(i, i + BATCH);
+        const { error } = await supabase
+          .from('nominal_santri')
+          .upsert(batch, { onConflict: 'santri_id,jenis_bayar,tahun' });
+        if (error) throw error;
+      }
+
+      alert(`Berhasil menyimpan nominal detail untuk ${targetSantriIds.length} santri.`);
+    } catch (err) {
+      alert('Gagal menyimpan: ' + err.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="nominal-settings__loading">
+        <div className="spinner"></div>
+        <p>Memuat data...</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="nominal-settings animate-fade-in">
+      <div className="nominal-settings__header-wrapper">
+        {onBack && (
+          <button className="nominal-settings__back-link" onClick={onBack}>
+            <ChevronLeft size={16} />
+            <span>Kembali ke Master Kategori</span>
+          </button>
+        )}
+        <div className="nominal-settings__title-block">
+          <h3 className="settings__section-title">Pengaturan Nominal per Santri</h3>
+          <p className="nominal-settings__desc">
+            Konfigurasi nominal tagihan untuk setiap santri berdasarkan kategori dan bulan.
+          </p>
+        </div>
+      </div>
+
+      <div className="nominal-settings__config-area">
+        <div className="nominal-settings__toolbar">
+          {/* Tahun */}
+          <div className="nominal-settings__tool-group">
+            <label className="nominal-settings__label">Tahun Pelajaran</label>
+            <div className="nominal-settings__year-controls">
+              <button className="nominal-settings__year-btn" onClick={() => setTahun(t => t - 1)}>←</button>
+              <span className="nominal-settings__year-value">{tahun}</span>
+              <button className="nominal-settings__year-btn" onClick={() => setTahun(t => t + 1)}>→</button>
+            </div>
+          </div>
+
+          {/* Mode */}
+          <div className="nominal-settings__tool-group">
+            <label className="nominal-settings__label">Target Penerapan</label>
+            <div className="nominal-settings__mode-toggle">
+              <button
+                className={`nominal-settings__mode-btn ${mode === 'all' ? 'nominal-settings__mode-btn--active' : ''}`}
+                onClick={() => setMode('all')}
+              >
+                <Users size={14} /> Semua
+              </button>
+              <button
+                className={`nominal-settings__mode-btn ${mode === 'individual' ? 'nominal-settings__mode-btn--active' : ''}`}
+                onClick={() => setMode('individual')}
+              >
+                Pilih Santri
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Individual Santri Picker */}
+        {mode === 'individual' && (
+          <div className="nominal-settings__santri-picker">
+            <div className="nominal-settings__santri-header">
+              <div className="nominal-settings__search-wrapper">
+                <input
+                  type="text"
+                  className="nominal-settings__santri-search"
+                  placeholder="Cari nama atau NIA..."
+                  value={searchSantri}
+                  onChange={(e) => setSearchSantri(e.target.value)}
+                />
+              </div>
+              <button className="nominal-settings__santri-toggle-all" onClick={selectAllSantri}>
+                {selectedSantriIds.length === santriList.length ? 'Batal Semua' : 'Pilih Semua'}
+              </button>
+            </div>
+            <div className="nominal-settings__santri-list">
+              {filteredSantri.map(s => (
+                <label key={s.id} className="nominal-settings__santri-item">
+                  <input
+                    type="checkbox"
+                    checked={selectedSantriIds.includes(s.id)}
+                    onChange={() => toggleSantri(s.id)}
+                  />
+                  <span className="nominal-settings__santri-name">{s.nama}</span>
+                  <span className="nominal-settings__santri-nia">{s.nia}</span>
+                </label>
+              ))}
+            </div>
+            {selectedSantriIds.length > 0 && (
+              <div className="nominal-settings__selection-badge">
+                <Badge variant="badge--green">{selectedSantriIds.length} santri dipilih</Badge>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Month Selector */}
+        <div className="nominal-settings__month-picker">
+          <div className="nominal-settings__month-header">
+            <label className="nominal-settings__label">Bulan Tagihan</label>
+            <button
+              type="button"
+              className="nominal-settings__month-toggle-all"
+              onClick={() => setSelectedMonths(selectedMonths.length === 12 ? [] : MONTHS.map(m => m.id))}
+            >
+              {selectedMonths.length === 12 ? 'Batal Semua' : 'Pilih Semua'}
+            </button>
+          </div>
+          <div className="nominal-settings__month-grid">
+            {MONTHS.map(m => (
+              <button
+                key={m.id}
+                type="button"
+                className={`nominal-settings__month-btn ${selectedMonths.includes(m.id) ? 'active' : ''}`}
+                onClick={() => toggleMonth(m.id)}
+              >
+                {m.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="nominal-settings__main-content">
+        <div className="nominal-settings__categories-header">
+          <label className="nominal-settings__label">Daftar Kategori & Nominal</label>
+          <span className="nominal-settings__count-hint">{categories.length} Kategori tersedia</span>
+        </div>
+
+        <div className="nominal-settings__cat-grid">
+          {categories.map(cat => {
+            const config = nominals[cat.prefix] || { isDetail: false, global: 0, months: {} };
+            const isHighlighted = highlightedPrefix === cat.prefix;
+            return (
+              <div
+                key={cat.prefix}
+                id={`cat-${cat.prefix}`}
+                className={`nominal-settings__cat-item ${config.isDetail ? 'nominal-settings__cat-item--detail' : ''} ${isHighlighted ? 'highlight' : ''}`}
+              >
+                <div className="nominal-settings__cat-header">
+                  <div className="nominal-settings__cat-title">
+                    <span className="nominal-settings__cat-label">{cat.label}</span>
+                    <code className="nominal-settings__cat-code">{cat.prefix}</code>
+                  </div>
+                  <button
+                    type="button"
+                    className={`nominal-settings__detail-toggle ${config.isDetail ? 'active' : ''}`}
+                    onClick={() => toggleDetailMode(cat.prefix)}
+                  >
+                    {config.isDetail ? 'Mode Global' : 'Mode Detail'}
+                  </button>
+                </div>
+
+                <div className="nominal-settings__cat-body">
+                  {!config.isDetail ? (
+                    <div className="nominal-settings__global-input">
+                      <NominalInput
+                        value={config.global}
+                        onChange={(val) => handleNominalChange(cat.prefix, val)}
+                        placeholder="Masukkan nominal..."
+                      />
+                      <span className="nominal-settings__input-hint">Diterapkan ke semua bulan terpilih</span>
+                    </div>
+                  ) : (
+                    <div className="nominal-settings__detail-grid">
+                      {MONTHS.map(m => (
+                        <div key={m.id} className="nominal-settings__detail-field">
+                          <span className="nominal-settings__detail-label">{m.label}</span>
+                          <input
+                            type="number"
+                            className="nominal-settings__detail-input"
+                            value={config.months[m.id] || 0}
+                            onChange={(e) => handleNominalChange(cat.prefix, parseInt(e.target.value) || 0, m.id)}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="nominal-settings__footer-spacer" />
+      <div className="nominal-settings__footer sticky">
+        <div className="nominal-settings__footer-content">
+          <div className="nominal-settings__footer-info">
+            <span className="nominal-settings__footer-text">
+              {mode === 'all' ? 'Menerapkan ke semua santri' : `${selectedSantriIds.length} santri terpilih`}
+            </span>
+          </div>
+          <Button
+            icon={Save}
+            onClick={handleSave}
+            disabled={saving}
+            className="nominal-settings__save-btn"
+          >
+            {saving ? 'Menyimpan...' : `Simpan Nominal Tahun ${tahun}`}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}

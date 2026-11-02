@@ -1,0 +1,68 @@
+/* NominalInput.css */
+.nominal-input {
+  position: relative;
+  width: 100%;
+}
+
+.nominal-input__label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: var(--sp-1);
+}
+
+.nominal-input__wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.nominal-input__prefix {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--primary-300);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.nominal-input__input {
+  width: 100%;
+  padding: 10px 14px 10px 40px;
+  border-radius: var(--r-4);
+  border: 1.5px solid var(--border-primary);
+  background: var(--surface-primary);
+  color: var(--text-primary);
+  font-size: 1rem;
+  font-weight: 600;
+  font-family: inherit;
+  letter-spacing: 0.5px;
+  transition: all var(--transition-fast);
+  outline: none;
+}
+
+.nominal-input__input::placeholder {
+  color: var(--text-tertiary);
+  font-weight: 400;
+}
+
+.nominal-input__input:focus {
+  border-color: var(--primary-300);
+  box-shadow: 0 0 0 3px rgba(255, 92, 2, 0.12);
+}
+
+.nominal-input__memory-hint {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.7rem;
+  color: var(--text-tertiary);
+  pointer-events: none;
+  opacity: 0.6;
+  white-space: nowrap;
+}

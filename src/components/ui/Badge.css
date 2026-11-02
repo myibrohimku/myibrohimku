@@ -1,0 +1,116 @@
+/* =============================================
+   Badge — Premium Pill Styles
+   ============================================= */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  border-radius: var(--r-full);
+  font-size: 0.72rem;
+  font-weight: 700;
+  white-space: nowrap;
+  letter-spacing: 0.02em;
+  border: 1px solid transparent;
+  /* Default — neutral */
+  background: var(--neutral-200);
+  color: var(--text-secondary);
+  border-color: var(--neutral-300);
+}
+
+/* ── Dot indicator auto-added to key statuses ── */
+.badge--green {
+  background: var(--green-100);
+  color: var(--green-300);
+  border-color: rgba(34, 197, 94, 0.25);
+}
+
+.badge--red {
+  background: var(--red-100);
+  color: var(--red-300);
+  border-color: rgba(239, 68, 68, 0.2);
+}
+
+.badge--yellow {
+  background: var(--yellow-100);
+  color: var(--yellow-300);
+  border-color: rgba(245, 158, 11, 0.2);
+}
+
+.badge--blue {
+  background: var(--blue-100);
+  color: var(--blue-300);
+  border-color: rgba(59, 130, 246, 0.2);
+}
+
+.badge--orange {
+  background: var(--primary-100);
+  color: var(--primary-400);
+  border-color: rgba(255, 92, 2, 0.2);
+}
+
+.badge--purple {
+  background: var(--secondary-100);
+  color: var(--secondary-400);
+  border-color: rgba(74, 0, 255, 0.15);
+}
+
+.badge--teal {
+  background: rgba(0, 150, 136, 0.1);
+  color: #0d9488;
+  border-color: rgba(0, 150, 136, 0.2);
+}
+
+.badge--neutral {
+  background: var(--neutral-200);
+  color: var(--neutral-700);
+  border-color: var(--neutral-300);
+}
+
+/* ── Secondary variant (used for Kamar/Instansi) ── */
+.badge--secondary,
+.badge.badge--secondary {
+  background: var(--surface-secondary);
+  color: var(--text-secondary);
+  border-color: var(--border-primary);
+  font-weight: 600;
+}
+
+/* ── Outline variant ── */
+.badge--outline,
+.badge.badge--outline {
+  background: transparent;
+  color: var(--text-secondary);
+  border-color: var(--border-primary);
+  font-weight: 600;
+}
+
+/* ── Success / Warning shorthand ── */
+.badge--success {
+  background: var(--green-100);
+  color: var(--green-300);
+  border-color: rgba(34, 197, 94, 0.25);
+}
+
+.badge--warning {
+  background: var(--yellow-100);
+  color: var(--yellow-300);
+  border-color: rgba(245, 158, 11, 0.2);
+}
+
+/* ── Dark Mode ── */
+[data-theme="dark"] .badge--teal {
+  background: rgba(0, 150, 136, 0.14);
+  color: #2dd4bf;
+  border-color: rgba(45, 212, 191, 0.2);
+}
+[data-theme="dark"] .badge--secondary {
+  background: var(--neutral-300);
+  color: var(--neutral-800);
+  border-color: var(--neutral-400);
+}
+[data-theme="dark"] .badge--outline {
+  color: var(--neutral-700);
+  border-color: var(--neutral-400);
+}

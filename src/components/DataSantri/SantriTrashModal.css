@@ -1,0 +1,85 @@
+/* SantriTrashModal.css */
+.trash-list-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  max-height: 400px;
+  overflow-y: auto;
+  padding: var(--sp-1);
+}
+
+.trash-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--sp-3) var(--sp-4);
+  background: var(--surface-secondary);
+  border: 1px solid var(--border-secondary);
+  border-radius: var(--r-4);
+  transition: all var(--transition-fast);
+}
+
+.trash-item:hover {
+  border-color: var(--primary-200);
+  background: var(--surface-elevated);
+}
+
+.trash-item-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.trash-item-name {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+}
+
+.trash-item-nia {
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+}
+
+.btn-restore {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: none;
+  background: var(--primary-100);
+  color: var(--primary-400);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.btn-restore:hover {
+  background: var(--primary-300);
+  color: white;
+  transform: rotate(-45deg);
+}
+
+.trash-actions {
+  display: flex;
+  gap: var(--sp-2);
+}
+
+.btn-permanent-delete {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: none;
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.btn-permanent-delete:hover {
+  background: #ef4444;
+  color: white;
+}

@@ -1,0 +1,57 @@
+.confirm-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--surface-overlay);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1100;
+  padding: var(--sp-4);
+  animation: fadeIn var(--transition-fast) ease;
+}
+
+.confirm-popup {
+  background: var(--surface-primary);
+  border-radius: var(--r-8);
+  box-shadow: var(--shadow-xl);
+  padding: var(--sp-8);
+  max-width: 400px;
+  width: 100%;
+  text-align: center;
+  animation: fadeInScale var(--transition-normal) ease;
+}
+
+.confirm-popup__icon {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--r-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto var(--sp-4);
+}
+
+.confirm-popup__icon--danger {
+  background: var(--red-100);
+  color: var(--red-200);
+}
+
+.confirm-popup__title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin-bottom: var(--sp-2);
+  color: var(--text-primary);
+}
+
+.confirm-popup__message {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  margin-bottom: var(--sp-6);
+  line-height: 1.5;
+}
+
+.confirm-popup__actions {
+  display: flex;
+  gap: var(--sp-3);
+  justify-content: center;
+}

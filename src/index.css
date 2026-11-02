@@ -1,0 +1,323 @@
+/* ===========================
+   MyIbrohimku CMS v2 — Design Tokens
+   =========================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+/* ── Light Mode (Default) ── */
+:root {
+  /* Primary — Orange */
+  --primary-100: #fff0e6;
+  --primary-200: #ffd1a3;
+  --primary-300: #ff5c02;
+  --primary-400: #e05000;
+  --primary-500: #b34000;
+
+  /* Secondary — Purple */
+  --secondary-100: #ede6ff;
+  --secondary-200: #c5a3ff;
+  --secondary-300: #4a00ff;
+  --secondary-400: #3a00cc;
+  --secondary-500: #2a0099;
+
+  /* Neutrals */
+  --neutral-50: #fafafa;
+  --neutral-100: #ffffff;
+  --neutral-200: #f0f0f5;
+  --neutral-300: #e0e0e8;
+  --neutral-400: #c0c0cc;
+  --neutral-500: #9090a0;
+  --neutral-600: #707080;
+  --neutral-700: #505060;
+  --neutral-800: #3a3a48;
+  --neutral-900: #2a2a35;
+  --neutral-1000: #1a1a25;
+
+  /* Feedback */
+  --green-100: #e6f9ee;
+  --green-200: #22c55e;
+  --green-300: #16a34a;
+  --red-100: #ffe6e6;
+  --red-200: #ef4444;
+  --red-300: #dc2626;
+  --yellow-100: #fef9e6;
+  --yellow-200: #f59e0b;
+  --yellow-300: #d97706;
+  --blue-100: #e6f0ff;
+  --blue-200: #3b82f6;
+  --blue-300: #2563eb;
+
+  /* Surfaces */
+  --surface-primary: var(--neutral-100);
+  --surface-secondary: var(--neutral-200);
+  --surface-elevated: var(--neutral-100);
+  --surface-overlay: rgba(26, 26, 37, 0.5);
+
+  /* Text */
+  --text-primary: var(--neutral-1000);
+  --text-secondary: var(--neutral-600);
+  --text-tertiary: var(--neutral-500);
+  --text-inverse: var(--neutral-100);
+
+  /* Borders */
+  --border-primary: var(--neutral-300);
+  --border-secondary: var(--neutral-200);
+  --border-focus: var(--primary-300);
+
+  /* Spacing */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 20px;
+  --sp-6: 24px;
+  --sp-7: 28px;
+  --sp-8: 32px;
+  --sp-10: 40px;
+  --sp-12: 48px;
+  --sp-16: 64px;
+
+  /* Radius */
+  --r-2: 4px;
+  --r-3: 6px;
+  --r-4: 8px;
+  --r-6: 12px;
+  --r-8: 16px;
+  --r-full: 9999px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+  --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.16);
+
+  /* Transitions */
+  --transition-fast: 150ms ease;
+  --transition-normal: 200ms ease;
+  --transition-slow: 300ms ease;
+
+  /* Layout */
+  --navbar-height: 64px;
+  --sidebar-width: 260px;
+  --sidebar-collapsed-width: 72px;
+
+  /* Font */
+  --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+/* ── Dark Mode ── */
+[data-theme="dark"] {
+  /* Neutrals — dark surface palette */
+  --neutral-50:   #0d0d18;
+  --neutral-100:  #13131f;
+  --neutral-200:  #1a1a2e;
+  --neutral-300:  #222238;
+  --neutral-400:  #2e2e4a;
+  --neutral-500:  #4a4a6e;
+  --neutral-600:  #8888aa;
+  --neutral-700:  #aaaabb;
+  --neutral-800:  #ccccdd;
+  --neutral-900:  #e0e0ee;
+  --neutral-1000: #f2f2f8;
+
+  /* Primary — lebih terang di dark agar tetap kontras */
+  --primary-100:  rgba(255, 92, 2, 0.12);
+  --primary-200:  rgba(255, 92, 2, 0.28);
+  --primary-300:  #ff7a30;
+  --primary-400:  #ff5c02;
+  --primary-500:  #e05000;
+
+  /* Secondary — lebih terang di dark */
+  --secondary-100: rgba(74, 0, 255, 0.12);
+  --secondary-200: rgba(74, 0, 255, 0.28);
+  --secondary-300: #7c4dff;
+  --secondary-400: #5c2dff;
+  --secondary-500: #4a00ff;
+
+  /* Feedback — soft pada dark bg agar tidak menyilaukan */
+  --green-100:  rgba(34, 197, 94, 0.12);
+  --green-200:  #4ade80;
+  --green-300:  #22c55e;
+  --red-100:    rgba(239, 68, 68, 0.12);
+  --red-200:    #f87171;
+  --red-300:    #ef4444;
+  --yellow-100: rgba(245, 158, 11, 0.12);
+  --yellow-200: #fbbf24;
+  --yellow-300: #f59e0b;
+  --blue-100:   rgba(59, 130, 246, 0.12);
+  --blue-200:   #60a5fa;
+  --blue-300:   #3b82f6;
+
+  /* Surfaces */
+  --surface-primary:   var(--neutral-100);
+  --surface-secondary: var(--neutral-50);
+  --surface-elevated:  var(--neutral-200);
+  --surface-overlay:   rgba(0, 0, 0, 0.65);
+
+  /* Text */
+  --text-primary:  var(--neutral-1000);
+  --text-secondary: var(--neutral-700);
+  --text-tertiary: var(--neutral-600);
+  --text-inverse:  #0d0d18;
+
+  /* Borders */
+  --border-primary:   var(--neutral-300);
+  --border-secondary: var(--neutral-200);
+  --border-focus:     var(--primary-300);
+
+  /* Shadows — lebih kuat di dark agar elemen berasa elevated */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.35);
+  --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 8px 28px rgba(0, 0, 0, 0.55);
+  --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.65);
+}
+
+/* ── Reset & Base ── */
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  font-size: 14px;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-family);
+  background: var(--surface-secondary);
+  color: var(--text-primary);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow: hidden;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+a:focus, button:focus, input:focus, select:focus, textarea:focus {
+  outline: none;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+}
+
+input, select, textarea {
+  font-family: inherit;
+  font-size: inherit;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+/* ── Scrollbar Styling ── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--neutral-400);
+  border-radius: var(--r-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--neutral-500);
+}
+
+/* ── Utility Classes ── */
+.flex { display: flex; }
+.flex-col { flex-direction: column; }
+.items-center { align-items: center; }
+.justify-center { justify-content: center; }
+.justify-between { justify-content: space-between; }
+.gap-1 { gap: var(--sp-1); }
+.gap-2 { gap: var(--sp-2); }
+.gap-3 { gap: var(--sp-3); }
+.gap-4 { gap: var(--sp-4); }
+.gap-6 { gap: var(--sp-6); }
+.gap-8 { gap: var(--sp-8); }
+.w-full { width: 100%; }
+.h-full { height: 100%; }
+.relative { position: relative; }
+.absolute { position: absolute; }
+.overflow-hidden { overflow: hidden; }
+.overflow-auto { overflow: auto; }
+.text-center { text-align: center; }
+.font-medium { font-weight: 500; }
+.font-semibold { font-weight: 600; }
+.font-bold { font-weight: 700; }
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── Animations ── */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInScale {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(100%); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideInLeft {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.animate-fade-in { animation: fadeIn var(--transition-normal) ease forwards; }
+.animate-fade-in-up { animation: fadeInUp var(--transition-slow) ease forwards; }
+.animate-fade-in-scale { animation: fadeInScale var(--transition-normal) ease forwards; }
+.animate-slide-in-right { animation: slideInRight var(--transition-slow) ease forwards; }
+
+/* --- Custom Form Submit Button Logic --- */
+.btn-transaction-submit {
+  transition: all 0.3s ease;
+}
+
+.btn-transaction-submit:focus {
+  outline: none !important;
+  box-shadow: 0 0 0 3px var(--primary-100), 0 4px 12px rgba(255, 92, 2, 0.2) !important;
+  transform: translateY(-1px);
+}

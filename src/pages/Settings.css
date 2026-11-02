@@ -1,0 +1,407 @@
+/* ──────────────────────────────────────────────
+   Settings Page — Responsive Layout
+   ────────────────────────────────────────────── */
+
+/* Page wrapper */
+.settings {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* Page header responsive */
+.settings .page-header {
+  margin-bottom: var(--sp-6);
+}
+
+.settings .page-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.settings .page-subtitle {
+  color: var(--text-secondary);
+  font-size: 0.88rem;
+  margin-top: var(--sp-1);
+}
+
+/* Default (mobile-first): single column */
+.settings__container {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--sp-6);
+  align-items: start;
+  min-width: 0;
+  width: 100%;
+}
+
+/* Prevent overflow on grid/flex children */
+.settings__content {
+  min-width: 0;
+  /* Allow horizontal scroll so matrix table container can scroll within card */
+  overflow-x: auto;
+  overflow-y: visible;
+}
+
+/* Settings section: prevent inner content from overflowing card */
+.settings__section {
+  min-width: 0;
+  width: 100%;
+  overflow-x: hidden;
+}
+
+/* ── Navigation ── */
+.settings__nav {
+  display: flex;
+  flex-direction: row;
+  gap: var(--sp-2);
+  overflow-x: auto;
+  padding-bottom: var(--sp-2);
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.settings__nav::-webkit-scrollbar {
+  display: none;
+}
+
+.settings__nav-item {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  border-radius: var(--r-4);
+  color: var(--text-secondary);
+  font-weight: 500;
+  font-size: 0.9rem;
+  transition: all var(--transition-fast);
+  text-align: left;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.settings__nav-item:hover {
+  background: var(--surface-primary);
+  color: var(--text-primary);
+}
+
+.settings__nav-item.active {
+  background: var(--primary-300);
+  color: white;
+  box-shadow: 0 4px 12px rgba(255, 92, 2, 0.25);
+}
+
+[data-theme="dark"] .settings__nav-item.active {
+  background: linear-gradient(135deg, var(--primary-300), var(--primary-400));
+  box-shadow: 0 4px 16px rgba(255, 122, 48, 0.35);
+}
+
+/* ── Desktop: sidebar layout ≥768px ── */
+@media (min-width: 768px) {
+  .settings__container {
+    grid-template-columns: 200px 1fr;
+    min-width: 0;
+  }
+
+  .settings__content {
+    min-width: 0;
+    overflow-x: auto;
+    overflow-y: visible;
+  }
+
+  .settings__nav {
+    flex-direction: column;
+    overflow-x: unset;
+    overflow-y: auto;
+    padding-bottom: 0;
+    position: sticky;
+    top: var(--sp-4);
+    background: var(--surface-primary);
+    border: 1px solid var(--border-secondary);
+    border-radius: var(--r-6);
+    padding: var(--sp-3);
+    gap: var(--sp-1);
+    scrollbar-width: auto;
+    max-height: calc(100vh - 120px); /* Fallback */
+    max-height: calc(100dvh - 120px);
+  }
+
+  .settings__nav::-webkit-scrollbar {
+    display: block;
+    width: 4px;
+  }
+
+  .settings__nav-item {
+    white-space: normal;
+    flex-shrink: unset;
+    width: 100%;
+    padding: var(--sp-3) var(--sp-4);
+    border-radius: var(--r-3);
+    font-size: 0.875rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .settings__container {
+    grid-template-columns: 220px 1fr;
+  }
+}
+
+/* ── Content ── */
+.settings__section-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: var(--sp-6);
+  color: var(--text-primary);
+}
+
+.settings__form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-6);
+  max-width: 500px;
+}
+
+.settings__form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--sp-4);
+}
+
+.settings__appearance-grid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-8);
+}
+
+.settings__option {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.settings__option-label {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.settings__theme-toggle {
+  display: flex;
+  background: var(--neutral-200);
+  padding: var(--sp-1);
+  border-radius: var(--r-4);
+  width: fit-content;
+  border: 1px solid var(--border-secondary);
+}
+
+[data-theme="dark"] .settings__theme-toggle {
+  background: var(--neutral-300);
+  border-color: var(--neutral-400);
+}
+
+.theme-btn {
+  padding: var(--sp-2) var(--sp-6);
+  border-radius: var(--r-3);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  transition: all var(--transition-fast);
+}
+
+.theme-btn.active {
+  background: var(--surface-primary);
+  color: var(--primary-300);
+  box-shadow: var(--shadow-sm);
+}
+
+[data-theme="dark"] .theme-btn.active {
+  background: var(--neutral-200);
+  color: var(--primary-300);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+.settings__hint {
+  font-size: 0.78rem;
+  color: var(--text-tertiary);
+}
+
+/* ── Toggle Switch ── */
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: var(--neutral-300);
+  transition: .4s;
+  border-radius: 34px;
+}
+
+.toggle-slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .4s;
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+input:checked + .toggle-slider {
+  background-color: var(--primary-300);
+}
+
+input:focus + .toggle-slider {
+  box-shadow: 0 0 1px var(--primary-300);
+}
+
+input:checked + .toggle-slider:before {
+  transform: translateX(20px);
+}
+
+[data-theme="dark"] .toggle-slider {
+  background-color: var(--neutral-400);
+}
+
+.toggle-row {
+  border: 1px solid var(--border-secondary);
+}
+
+/* ── Report Grid ── */
+.settings__report-grid {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: var(--sp-8);
+  max-width: 100% !important;
+}
+
+.settings__report-details {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}
+
+.settings__report-preview {
+  transition: all var(--transition-normal);
+}
+
+.settings__report-preview:hover {
+  border-color: var(--primary-300) !important;
+  box-shadow: var(--shadow-lg) !important;
+}
+
+@media (max-width: 991px) {
+  .settings__report-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── Database Mode Selection ── */
+.mode-option.selected .mode-content {
+  border-color: var(--primary-300) !important;
+  background: var(--surface-primary) !important;
+  box-shadow: var(--shadow-md);
+}
+
+.column-item:hover {
+  background: var(--surface-secondary);
+}
+
+.maintenance-box {
+  max-width: 800px;
+}
+
+/* ── Responsive Breakpoints ── */
+@media (max-width: 767px) {
+  .settings__form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .settings__form {
+    max-width: 100%;
+  }
+
+  .settings__section-title {
+    font-size: 1rem;
+    margin-bottom: var(--sp-4);
+  }
+
+  .maintenance-box {
+    max-width: 100%;
+  }
+
+  /* Reduce card padding on mobile to give more space to table */
+  .settings__content.card--padded {
+    padding: var(--sp-3) var(--sp-3);
+  }
+
+  /* Allow matrix table container to scroll horizontally within card */
+  .settings__content {
+    overflow-x: auto;
+  }
+
+  .settings .page-title {
+    font-size: 1.25rem;
+  }
+
+  .settings .page-subtitle {
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .maintenance-mode {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 600px) {
+  .settings__nav-item {
+    font-size: 0.8rem;
+    padding: var(--sp-2) var(--sp-3);
+    gap: var(--sp-2);
+  }
+
+  .settings__nav-item svg {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .settings__nav-item span {
+    display: none;
+  }
+
+  .settings__nav-item {
+    padding: var(--sp-2) var(--sp-3);
+    border-radius: var(--r-3);
+    justify-content: center;
+  }
+
+  .settings__section-title {
+    font-size: 0.95rem;
+  }
+}

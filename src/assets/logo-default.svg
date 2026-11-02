@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none">
+  <defs>
+    <linearGradient id="grad1" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#ff5c02"/>
+      <stop offset="100%" stop-color="#4a00ff"/>
+    </linearGradient>
+  </defs>
+  <rect width="120" height="120" rx="24" fill="url(#grad1)"/>
+  <text x="50%" y="54%" dominant-baseline="middle" text-anchor="middle" font-family="Inter, sans-serif" font-weight="800" font-size="48" fill="#ffffff">MI</text>
+  <text x="50%" y="78%" dominant-baseline="middle" text-anchor="middle" font-family="Inter, sans-serif" font-weight="500" font-size="14" fill="rgba(255,255,255,0.8)">MyIbrohim</text>
+</svg>

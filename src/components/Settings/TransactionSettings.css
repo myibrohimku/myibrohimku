@@ -1,0 +1,123 @@
+/* TransactionSettings.css */
+.transaction-settings {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-6);
+  min-width: 0;
+  width: 100%;
+  overflow-x: hidden;
+}
+
+.settings__section-header-main {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  margin-bottom: var(--sp-2);
+}
+
+.transaction-settings__tabs {
+  display: flex;
+  gap: var(--sp-2);
+  padding: 4px;
+  background: var(--surface-secondary);
+  border-radius: var(--r-4);
+  width: fit-content;
+  border: 1px solid var(--border-secondary);
+}
+
+.transaction-settings__tab-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: 10px 20px;
+  border-radius: var(--r-3);
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  font-family: inherit;
+}
+
+.transaction-settings__tab-btn:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.transaction-settings__tab-btn.active {
+  background: white;
+  color: var(--primary-400);
+  box-shadow: var(--shadow-sm);
+}
+
+.transaction-settings__content {
+  margin-top: var(--sp-2);
+  animation: fadeIn 300ms ease;
+  min-width: 0;
+  width: 100%;
+  overflow-x: auto;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 768px) {
+  .settings__section-header-main {
+    flex-wrap: wrap;
+    gap: var(--sp-3);
+  }
+
+  .transaction-settings__tabs {
+    width: 100%;
+  }
+
+  .transaction-settings__tab-btn {
+    flex: 1;
+    justify-content: center;
+    padding: 10px 8px;
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .transaction-settings__tabs {
+    width: 100%;
+  }
+
+  .transaction-settings__tab-btn {
+    flex: 1;
+    justify-content: center;
+    padding: 10px 6px;
+    font-size: 0.75rem;
+    gap: var(--sp-1);
+  }
+}
+
+@media (max-width: 480px) {
+  .transaction-settings {
+    gap: var(--sp-4);
+  }
+
+  .transaction-settings__tab-btn {
+    padding: 9px 4px;
+    font-size: 0.7rem;
+  }
+
+  .transaction-settings__tab-btn svg {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+  }
+
+  .settings__section-header-main h2 {
+    font-size: 1rem;
+  }
+
+  .settings__section-header-main p {
+    font-size: 0.75rem;
+  }
+}
