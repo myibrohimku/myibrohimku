@@ -7,7 +7,7 @@ import * as XLSX from 'xlsx';
  */
 const getExportValue = (item, col, settings = {}) => {
   const val = item[col.key];
-  
+
   // 1. Direct Relational Data (from Supabase Join)
   if (col.key === 'kamar') return item.ref_kamar?.nama_kamar || val || '-';
   if (col.key === 'status') return item.ref_status_santri?.nama_status || val || '-';
@@ -21,7 +21,7 @@ const getExportValue = (item, col, settings = {}) => {
   if (col.key === 'penghasilan_ayah') return item.rel_pgh_ayah?.rentang_penghasilan || val || '-';
   if (col.key === 'penghasilan_ibu') return item.rel_pgh_ibu?.rentang_penghasilan || val || '-';
   if (col.key === 'status_saudara') return item.rel_status_saudara?.nama_status || val || '-';
-  
+
   // 2. Format dates
   if (col.key === 'tanggal_lahir' && val) {
     try {
@@ -66,9 +66,9 @@ export const generatePDF = (data, columns, settings = {}) => {
   // 1. Draw Kop Surat
   if (settings.logo) {
     try {
-        doc.addImage(settings.logo, 'PNG', margin, currentY, 25, 25);
+      doc.addImage(settings.logo, 'PNG', margin, currentY, 25, 25);
     } catch (e) {
-        console.error("Error adding logo to PDF", e);
+      console.error("Error adding logo to PDF", e);
     }
   }
 
@@ -90,7 +90,7 @@ export const generatePDF = (data, columns, settings = {}) => {
   doc.line(margin, currentY + 1, pageWidth - margin, currentY + 1);
 
   currentY += 10;
-  
+
   // 2. Report Title
   doc.setFontSize(12);
   doc.setFont('helvetica', 'bold');
@@ -126,16 +126,16 @@ export const generatePDF = (data, columns, settings = {}) => {
   const signatureWidth = 60;
   const signatureX = pageWidth - margin - signatureWidth;
 
-  if (finalY + 40 < pageHeight) { 
+  if (finalY + 40 < pageHeight) {
     doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
     const dateStr = `Kebumen, ${new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}`;
-    doc.text(dateStr, signatureX + signatureWidth/2, finalY, { align: 'center' });
-    
-    doc.text(settings.jabatanAdmin || 'Sekretaris', signatureX + signatureWidth/2, finalY + 7, { align: 'center' });
-    
+    doc.text(dateStr, signatureX + signatureWidth / 2, finalY, { align: 'center' });
+
+    doc.text(settings.jabatanAdmin || 'Sekretaris', signatureX + signatureWidth / 2, finalY + 7, { align: 'center' });
+
     doc.setFont('helvetica', 'bold');
-    doc.text(settings.namaAdmin || 'ADMINISTRATOR', signatureX + signatureWidth/2, finalY + 30, { align: 'center' });
+    doc.text(settings.namaAdmin || 'ADMINISTRATOR', signatureX + signatureWidth / 2, finalY + 30, { align: 'center' });
     doc.setLineWidth(0.2);
     doc.line(signatureX + 5, finalY + 31, signatureX + signatureWidth - 5, finalY + 31);
   }
@@ -188,7 +188,7 @@ export const generateExcel = (data, columns, settings = {}) => {
  */
 export const generateCombinedTransactionExcel = (incomeData, outcomeData, settings = {}) => {
   const master = settings.masterData || {};
-  
+
   const getLabel = (list, id) => {
     return list?.find(item => item.id === id || item.value === id)?.label || id || '-';
   };
@@ -233,7 +233,7 @@ export const generateCombinedTransactionExcel = (incomeData, outcomeData, settin
     const row = {};
     incomeColumns.forEach(col => {
       let val = item[col.key];
-      
+
       if (col.key === 'created_at') {
         val = new Date(item.created_at).toLocaleString('id-ID');
       } else if (col.key === 'nia') val = item.databasesantri?.nia || '-';
@@ -254,7 +254,7 @@ export const generateCombinedTransactionExcel = (incomeData, outcomeData, settin
         }
       } else if (col.key === 'kasir') val = getLabel(master.kasirList, item.kasir_id);
       else if (col.key === 'keterangan') val = item.sumber_dana_custom || '-';
-      
+
       row[col.label] = val;
     });
     return row;
@@ -274,7 +274,7 @@ export const generateCombinedTransactionExcel = (incomeData, outcomeData, settin
     const row = {};
     outcomeColumns.forEach(col => {
       let val = item[col.key];
-      
+
       if (col.key === 'created_at') {
         val = new Date(item.created_at).toLocaleString('id-ID');
       } else if (col.key === 'urgensi') val = getLabel(master.urgensiList, item.urgensi_id);
@@ -285,7 +285,7 @@ export const generateCombinedTransactionExcel = (incomeData, outcomeData, settin
           val = '-';
         }
       }
-      
+
       row[col.label] = val;
     });
     return row;
@@ -343,7 +343,7 @@ export const generateTunggakanLandscapePDF = (santri, months, settings = {}) => 
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(18);
   doc.text(settings.namaInstansi || 'YAYASAN RUBATH AL KAHFI', pageWidth / 2, currentY, { align: 'center' });
-  
+
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(10);
   currentY += 7;
@@ -354,7 +354,7 @@ export const generateTunggakanLandscapePDF = (santri, months, settings = {}) => 
   doc.line(margin, currentY, pageWidth - margin, currentY);
   doc.setLineWidth(0.2);
   doc.line(margin, currentY + 1, pageWidth - margin, currentY + 1);
-  
+
   currentY += 15;
   doc.setFontSize(14);
   doc.setFont('helvetica', 'bold');
@@ -364,11 +364,11 @@ export const generateTunggakanLandscapePDF = (santri, months, settings = {}) => 
   doc.setFontSize(11);
   doc.setFont('helvetica', 'normal');
   doc.text(`Assalamu'alaikum wrwb.`, margin, currentY);
-  
+
   currentY += 10;
   doc.text(`Pangapunten nipun bu/pak Mohon Maaf Sebelumnya.`, margin, currentY);
   doc.text(`Ingin menyampaikan rincian tagihan pembayaran atas nama santri:`, margin, currentY + 6);
-  
+
   currentY += 18;
   doc.setFont('helvetica', 'bold');
   doc.text(`NAMA  : ${santri.nama || '-'}`, margin + 5, currentY);
@@ -378,7 +378,7 @@ export const generateTunggakanLandscapePDF = (santri, months, settings = {}) => 
   doc.text(`KAMAR : ${santri.kamar || '-'}`, margin + 5, currentY);
 
   currentY += 12;
-  
+
   // 2. Table of Unpaid Items
   const tableHeaders = ['Bulan', 'Kategori', 'Target Tagihan', 'Sudah Dibayar', 'Sisa Tunggakan', 'Status'];
   const tableData = months.map(m => [
@@ -413,12 +413,12 @@ export const generateTunggakanLandscapePDF = (santri, months, settings = {}) => 
   });
 
   currentY = doc.lastAutoTable.finalY + 15;
-  
+
   // 3. Footer & Total
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(12);
   doc.text(`TOTAL TUNGGAKAN : Rp ${santri.totalTunggakan.toLocaleString('id-ID')}`, pageWidth - margin, currentY, { align: 'right' });
-  
+
   currentY += 15;
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(10);
@@ -431,7 +431,7 @@ export const generateTunggakanLandscapePDF = (santri, months, settings = {}) => 
   const sigX = pageWidth - margin - 70;
   doc.text(`Kebumen, ${new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}`, sigX + 35, currentY, { align: 'center' });
   doc.text(settings.jabatanAdmin || 'Bendahara Asrama', sigX + 35, currentY + 6, { align: 'center' });
-  
+
   doc.setFont('helvetica', 'bold');
   doc.text(settings.namaAdmin || 'MUHAMMAD ZIDNI RAMADHANI', sigX + 35, currentY + 30, { align: 'center' });
   doc.line(sigX + 10, currentY + 31, sigX + 60, currentY + 31);
@@ -447,7 +447,7 @@ export const generateTunggakanLandscapePDF = (santri, months, settings = {}) => 
   const categoryStr = settings.categoryLabel ? settings.categoryLabel.replace(/[^a-zA-Z0-9 ]/g, '') : '';
   const namaStr = santri.nama ? santri.nama.replace(/[^a-zA-Z0-9 ]/g, '') : '';
   const fileName = `Tagihan ${categoryStr} ${namaStr}`.trim() + '.pdf';
-  
+
   doc.save(fileName);
 };
 
@@ -469,8 +469,8 @@ export const generateBulkTunggakanPDF = (data, settings = {}) => {
   // Header
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(16);
-  doc.text(settings.namaInstansi || 'YAYASAN RUBATH AL KAHFI', pageWidth / 2, currentY, { align: 'center' });
-  
+  doc.text(settings.namaInstansi || 'ASRAMA SAYYID IBROHIM', pageWidth / 2, currentY, { align: 'center' });
+
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(10);
   currentY += 6;
@@ -479,12 +479,12 @@ export const generateBulkTunggakanPDF = (data, settings = {}) => {
   currentY += 5;
   doc.setLineWidth(0.5);
   doc.line(margin, currentY, pageWidth - margin, currentY);
-  
+
   currentY += 10;
   doc.setFontSize(14);
   doc.setFont('helvetica', 'bold');
   doc.text('LAPORAN TUNGGAKAN SANTRI', pageWidth / 2, currentY, { align: 'center' });
-  
+
   currentY += 8;
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
@@ -495,7 +495,7 @@ export const generateBulkTunggakanPDF = (data, settings = {}) => {
 
   // Table Data
   const tableHeaders = ['No', 'Nama / NIA', 'Kamar', 'Bulan Nunggak', 'Total Tunggakan'];
-  
+
   let grandTotal = 0;
 
   const tableData = data.map((s, index) => {
@@ -542,13 +542,13 @@ export const generateBulkTunggakanPDF = (data, settings = {}) => {
   });
 
   currentY = doc.lastAutoTable.finalY + 15;
-  
+
   // Footer Signature
   const sigX = pageWidth - margin - 60;
   doc.setFont('helvetica', 'normal');
   doc.text(`Kebumen, ${new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}`, sigX + 30, currentY, { align: 'center' });
   doc.text(settings.jabatanAdmin || 'Bendahara Asrama', sigX + 30, currentY + 5, { align: 'center' });
-  
+
   doc.setFont('helvetica', 'bold');
   doc.text(settings.namaAdmin || '-', sigX + 30, currentY + 25, { align: 'center' });
   doc.setLineWidth(0.3);
@@ -558,6 +558,6 @@ export const generateBulkTunggakanPDF = (data, settings = {}) => {
   const categoryStr = settings.categoryLabel ? settings.categoryLabel.replace(/[^a-zA-Z0-9 ]/g, '') : '';
   const yearStr = settings.year ? settings.year.toString() : '';
   const fileName = `Tunggakan ${categoryStr} ${yearStr}`.trim() + '.pdf';
-  
+
   doc.save(fileName);
 };

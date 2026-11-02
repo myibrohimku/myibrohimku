@@ -26,12 +26,12 @@ const formatIdDateNum = (dateStr) => {
   return Number(`${day}${month}${year}`);
 };
 
-export default function ReceiptModal({ 
-  isOpen, 
-  onClose, 
-  data, 
+export default function ReceiptModal({
+  isOpen,
+  onClose,
+  data,
   type, // 'income' | 'outcome'
-  masterData 
+  masterData
 }) {
   const receiptRef = useRef(null);
   const [isDownloading, setIsDownloading] = useState(false);
@@ -97,12 +97,12 @@ export default function ReceiptModal({
       const originalHeight = targetElement.style.height;
       const originalOverflow = targetElement.style.overflow;
       const originalMaxH = targetElement.style.maxHeight;
-      
+
       targetElement.style.height = 'max-content';
       targetElement.style.maxHeight = 'none';
       targetElement.style.overflow = 'visible';
       targetElement.style.aspectRatio = 'auto';
-      
+
       const detailsEl = targetElement.querySelector('.receipt__details');
       const originalDetailsOverflow = detailsEl ? detailsEl.style.overflow : '';
       const originalDetailsHeight = detailsEl ? detailsEl.style.height : '';
@@ -125,9 +125,9 @@ export default function ReceiptModal({
         detailsEl.style.overflow = originalDetailsOverflow;
         detailsEl.style.height = originalDetailsHeight;
       }
-      
+
       const imgData = canvas.toDataURL('image/png');
-      
+
       const pdf = new jsPDF({
         orientation: canvas.width > canvas.height ? 'landscape' : 'portrait',
         unit: 'px',
@@ -135,7 +135,7 @@ export default function ReceiptModal({
       });
 
       pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
-      
+
       // Format tanggal DDMMYYYY dari created_at
       const pdfDate = (() => {
         const d = new Date(data.created_at);
@@ -172,12 +172,12 @@ export default function ReceiptModal({
       const originalHeight = targetElement.style.height;
       const originalOverflow = targetElement.style.overflow;
       const originalMaxH = targetElement.style.maxHeight;
-      
+
       targetElement.style.height = 'max-content';
       targetElement.style.maxHeight = 'none';
       targetElement.style.overflow = 'visible';
       targetElement.style.aspectRatio = 'auto';
-      
+
       const detailsEl = targetElement.querySelector('.receipt__details');
       const originalDetailsOverflow = detailsEl ? detailsEl.style.overflow : '';
       const originalDetailsHeight = detailsEl ? detailsEl.style.height : '';
@@ -200,9 +200,9 @@ export default function ReceiptModal({
         detailsEl.style.overflow = originalDetailsOverflow;
         detailsEl.style.height = originalDetailsHeight;
       }
-      
+
       const imgData = canvas.toDataURL('image/png');
-      
+
       // Format tanggal DDMMYYYY dari created_at
       const fileDate = (() => {
         const d = new Date(data.created_at);
@@ -246,7 +246,7 @@ export default function ReceiptModal({
       <button className="receipt-modal__close-btn" onClick={onClose} title="Tutup">
         <X size={22} />
       </button>
-      
+
       <div className={`receipt-modal__content ${isIncome ? 'receipt--income' : 'receipt--outcome'}`} ref={receiptRef}>
         {/* Watermark pattern */}
         <div className="receipt__watermark-grid" aria-hidden="true">
@@ -261,7 +261,7 @@ export default function ReceiptModal({
             {isIncome ? 'BUKTI PEMBAYARAN' : 'BUKTI PENGELUARAN'}
           </h1>
           <p className="receipt__subtitle">
-            Asrama Sayyid Ibrohim Utara
+            Asrama Sayyid Ibrohim
           </p>
         </div>
 
@@ -428,9 +428,9 @@ export default function ReceiptModal({
               {isIncome ? (getKasirLabel(data.kasir_id) || 'Kasir') : 'Bendahara'}
             </span>
           </div>
-          
+
           <p className="receipt__footer-msg">
-            {isIncome 
+            {isIncome
               ? 'Trimakasih Banyak Atas Kerjasamnya Semoga Termasuk Amal yang Berkah bagi kita.'
               : 'Mohon Gunakan Pengeluaran Dengan Bijak!'}
           </p>
@@ -439,16 +439,16 @@ export default function ReceiptModal({
 
       {/* ──── ACTION BAR ──── */}
       <div className="receipt-modal__actions">
-        <Button 
-          icon={Download} 
+        <Button
+          icon={Download}
           onClick={handleDownloadPdf}
           disabled={isDownloading}
           className="receipt-modal__download-btn"
         >
           {isDownloading ? 'Memproses...' : 'Unduh PDF'}
         </Button>
-        <Button 
-          icon={Download} 
+        <Button
+          icon={Download}
           onClick={handleDownloadPng}
           disabled={isDownloading}
           className="receipt-modal__download-btn"
