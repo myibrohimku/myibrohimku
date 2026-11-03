@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Tag, DollarSign, Settings2, Database } from 'lucide-react';
+import { Tag, Settings2, Database } from 'lucide-react';
 import CategorySettings from './CategorySettings';
 import NominalSettings from '../Transactions/NominalSettings';
 import TransactionMaintenance from './TransactionMaintenance';

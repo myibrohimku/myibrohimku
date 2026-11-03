@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Download, Upload, Save, X, AlertCircle } from 'lucide-react';
+import { useState } from 'react';
+import { Download, Upload, Save, AlertCircle } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import Modal from '../ui/Modal';
 import Button from '../ui/Button';
@@ -22,6 +22,12 @@ export default function TransactionUploadModal({
 
   const isIncome = type === 'income';
 
+  const handleClose = () => {
+    setUploadDataPreview([]);
+    setErrorLogs([]);
+    onClose();
+  };
+
   const handleDownloadTemplate = () => {
     const templateHeaders = isIncome 
       ? ["nia", "jenis_bayar_id", "nominal", "tanggal", "sumber_dana_id", "metode_bayar", "kasir_id", "keterangan"]
@@ -34,9 +40,9 @@ export default function TransactionUploadModal({
 
     // Add reference sheet if needed
     const refData = [
-      ["PENTING: Gunakan angka ID untuk relasi."],
+      ["PENTING: Gunakan kode/ID yang tertera di sheet referensi ini."],
       ["metode_bayar: 'tunai' atau 'transfer'"],
-      ["sumber_dana (outcome): format 'id:nominal;id:nominal' (contoh: '1:50000;2:20000')"],
+      ["sumber_dana (outcome): format 'kode:nominal;kode:nominal' (contoh: 'ld01:50000;ks01:20000')"],
       [""]
     ];
 
@@ -50,8 +56,8 @@ export default function TransactionUploadModal({
     } else {
       refData.push(["--- URGENSI ---", "--- LABEL ---"]);
       masterData.urgensiList?.forEach(u => refData.push([u.id, u.label]));
-      refData.push([""], ["--- JENIS DANA (SUMBER) ---", "--- NAMA ---"]);
-      masterData.jenisBayar?.forEach(j => refData.push([j.id, j.label]));
+      refData.push([""], ["--- SUMBER DANA (KODE : NAMA) ---", "--- LABEL ---"]);
+      masterData.sumberDanaList?.forEach(s => refData.push([s.kode, s.label]));
     }
 
     const wsRef = XLSX.utils.aoa_to_sheet(refData);
@@ -63,6 +69,9 @@ export default function TransactionUploadModal({
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
+
+    setUploadDataPreview([]);
+    setErrorLogs([]);
 
     const reader = new FileReader();
     reader.onload = async (evt) => {
@@ -92,7 +101,7 @@ export default function TransactionUploadModal({
               // Hilangkan tanda kutip tunggal di awal jika ada (format text excel)
               const cleanStr = excelDate.trim().replace(/^'/, '');
               // Regex membaca [tanggal/bulan/tahun jam:menit:detik]
-              const regex = /^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})(?:\s+(\d{1,2}):(\d{2})(?::(\d{2}))?)?$/;
+              const regex = /^(\d{1,2})[/-](\d{1,2})[/-](\d{4})(?:\s+(\d{1,2}):(\d{2})(?::(\d{2}))?)?$/;
               const match = cleanStr.match(regex);
               if (match) {
                 const day = parseInt(match[1], 10);
@@ -129,19 +138,30 @@ export default function TransactionUploadModal({
             const santriStr = row.nia?.toString().trim();
             const santri = santriStr ? niaMap.get(santriStr) : null;
             if (!santri) logs.push(`Baris ${idx + 2}: NIA ${row.nia} tidak ditemukan.`);
-            
+
+            const nominalValue = parseFloat(row.nominal) || 0;
+            const jenisBayar = row.jenis_bayar_id?.toString().trim() || null;
+            const kasirId = row.kasir_id?.toString().trim() || null;
+            if (!jenisBayar) logs.push(`Baris ${idx + 2}: jenis_bayar_id wajib diisi.`);
+            if (!kasirId) logs.push(`Baris ${idx + 2}: kasir_id wajib diisi.`);
+            if (nominalValue <= 0) logs.push(`Baris ${idx + 2}: nominal harus lebih dari 0.`);
+
+            const sumberDanaId = row.sumber_dana_id === undefined || row.sumber_dana_id === null || row.sumber_dana_id === ''
+              ? null
+              : parseInt(row.sumber_dana_id, 10);
+
             const rowDate = parseExcelDate(row.tanggal);
 
             return {
               santri_id: santri?.id || null,
               _santri_nama: santri?.nama || 'TIDAK DITEMUKAN',
               _nia: row.nia,
-              jenis_bayar: row.jenis_bayar_id?.toString() || null,
-              nominal: parseFloat(row.nominal) || 0,
+              jenis_bayar: jenisBayar,
+              nominal: nominalValue,
               created_at: rowDate.toISOString(),
-              sumber_dana_id: row.sumber_dana_id ? parseInt(row.sumber_dana_id) : null,
+              sumber_dana_id: Number.isFinite(sumberDanaId) ? sumberDanaId : null,
               metode_bayar: row.metode_bayar?.toString().toLowerCase() === 'transfer' ? 'transfer' : 'tunai',
-              kasir_id: row.kasir_id?.toString() || null,
+              kasir_id: kasirId,
               sumber_dana_custom: row.keterangan ? String(row.keterangan) : null,
               tahun_bayar: rowDate.getFullYear()
             };
@@ -152,7 +172,8 @@ export default function TransactionUploadModal({
           setUploading(false);
         } else {
           // Outcome logic
-          const sanitized = data.map(row => {
+          const logs = [];
+          const sanitized = data.map((row, idx) => {
             // Parse sumber_dana format 'id:nominal;id:nominal'
             let sources = [];
             if (row.sumber_dana) {
@@ -171,22 +192,31 @@ export default function TransactionUploadModal({
               }
             }
 
+            const nominalValue = parseFloat(row.nominal) || 0;
+            if (!row.pengambil || !String(row.pengambil).trim()) logs.push(`Baris ${idx + 2}: pengambil wajib diisi.`);
+            if (!row.urgensi_id) logs.push(`Baris ${idx + 2}: urgensi_id wajib diisi.`);
+            if (nominalValue <= 0) logs.push(`Baris ${idx + 2}: nominal harus lebih dari 0.`);
+            if (sources.length === 0) logs.push(`Baris ${idx + 2}: sumber_dana wajib diisi.`);
+
             const rowDate = parseExcelDate(row.tanggal);
 
             return {
-              pengambil: row.pengambil ? String(row.pengambil) : '',
+              pengambil: row.pengambil ? String(row.pengambil).trim() : '',
               deskripsi: row.deskripsi ? String(row.deskripsi) : '',
-              nominal: parseFloat(row.nominal) || 0,
+              nominal: nominalValue,
               created_at: rowDate.toISOString(),
-              urgensi_id: row.urgensi_id?.toString() || null,
+              urgensi_id: row.urgensi_id?.toString().trim() || null,
               sumber_dana: sources,
               _dateKey: rowDate.toISOString().split('T')[0] // For duplicate matching
             };
           });
           setUploadDataPreview(sanitized);
+          setErrorLogs(logs);
         }
-      } catch (err) {
+      } catch {
         addToast("Gagal membaca file Excel. Pastikan formatnya sesuai template.", "error");
+      } finally {
+        setUploading(false);
       }
     };
     reader.readAsBinaryString(file);
@@ -210,11 +240,16 @@ export default function TransactionUploadModal({
       let insertedCount = 0;
 
       if (isIncome) {
+        // Kunci unik mengikuti constraint DB (santri_id, jenis_bayar, tahun_bayar).
+        // Tanggal tidak boleh ikut menjadi kunci, jika tidak dua baris dengan tanggal
+        // berbeda akan lolos dedupe lalu gagal saat insert/upsert.
+        const buildIncomeKey = (row) =>
+          `${row.santri_id}-${String(row.jenis_bayar).toLowerCase()}-${row.tahun_bayar}`;
+
         // Deduplicate internal array to prevent constraint violation on identical rows
         const aggregatedIncome = new Map();
         uploadDataPreview.forEach(row => {
-          const datePart = row.created_at.split('T')[0];
-          const key = `${row.santri_id}-${String(row.jenis_bayar).toLowerCase()}-${row.tahun_bayar}-${datePart}`;
+          const key = buildIncomeKey(row);
           if (aggregatedIncome.has(key)) {
             const existing = aggregatedIncome.get(key);
             existing.nominal += row.nominal;
@@ -235,25 +270,27 @@ export default function TransactionUploadModal({
           const chunkSize = 200;
           for (let i = 0; i < santriIds.length; i += chunkSize) {
             const chunkSantriIds = santriIds.slice(i, i + chunkSize);
-            const { data: existing } = await supabase
+            const { data: existing, error: existingError } = await supabase
               .from('transaksi_pemasukan')
               .select('id, santri_id, jenis_bayar, tahun_bayar, created_at')
               .in('santri_id', chunkSantriIds)
               .in('tahun_bayar', years);
 
+            if (existingError) throw existingError;
+
             if (existing) {
               existing.forEach(e => {
-                const eDatePart = new Date(e.created_at).toISOString().split('T')[0];
-                existingMap.set(`${e.santri_id}-${String(e.jenis_bayar).toLowerCase()}-${e.tahun_bayar}-${eDatePart}`, e.id);
+                existingMap.set(buildIncomeKey(e), e.id);
               });
             }
           }
         }
 
         deduplicatedUploadData.forEach(row => {
-          const datePart = row.created_at.split('T')[0];
-          const key = `${row.santri_id}-${String(row.jenis_bayar).toLowerCase()}-${row.tahun_bayar}-${datePart}`;
-          const { _santri_nama, _nia, ...rest } = row;
+          const key = buildIncomeKey(row);
+          const rest = { ...row };
+          delete rest._santri_nama;
+          delete rest._nia;
           if (existingMap.has(key)) {
             // Include existing ID to perform an update (Paste and Replace)
             finalDataToSave.push({ ...rest, id: existingMap.get(key) });
@@ -274,6 +311,8 @@ export default function TransactionUploadModal({
             .select('id, pengambil, deskripsi, created_at')
             .in('pengambil', pengambilList);
 
+          if (fetchOutError) throw fetchOutError;
+
           existingOutMap = new Map(existingOut?.map(e => {
               const datePart = new Date(e.created_at).toISOString().split('T')[0];
               return [`${e.pengambil}-${e.deskripsi || ''}-${datePart}`, e.id];
@@ -282,7 +321,8 @@ export default function TransactionUploadModal({
 
         uploadDataPreview.forEach(row => {
           const key = `${row.pengambil}-${row.deskripsi}-${row._dateKey}`;
-          const { _dateKey, ...rest } = row;
+          const rest = { ...row };
+          delete rest._dateKey;
           if (existingOutMap.has(key)) {
              finalDataToSave.push({ ...rest, id: existingOutMap.get(key) });
              updatedCount++;
@@ -319,7 +359,7 @@ export default function TransactionUploadModal({
 
       addToast(`Berhasil! ${insertedCount} data baru ditambahkan, ${updatedCount} data diperbarui.`, 'success');
       onSuccess();
-      onClose();
+      handleClose();
     } catch (err) {
       addToast('Gagal menyimpan ke database: ' + err.message, 'error');
     } finally {
@@ -328,7 +368,7 @@ export default function TransactionUploadModal({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={`Import ${isIncome ? 'Pemasukan' : 'Pengeluaran'}`} maxWidth="850px">
+    <Modal isOpen={isOpen} onClose={handleClose} title={`Import ${isIncome ? 'Pemasukan' : 'Pengeluaran'}`} maxWidth="850px">
       <div className="transaction-upload">
         <div className="maintenance-warning">
            <Download size={18} className="warning-icon" />
@@ -339,7 +379,14 @@ export default function TransactionUploadModal({
            <Button variant="outline" icon={Download} onClick={handleDownloadTemplate}>Unduh Template Excel</Button>
            <div className="file-input-wrapper">
               <Button variant="primary" icon={Upload}>Pilih File Excel</Button>
-              <input type="file" accept=".xlsx, .xls" onChange={handleFileUpload} />
+              <input
+                type="file"
+                accept=".xlsx, .xls"
+                onChange={(e) => {
+                  handleFileUpload(e);
+                  e.target.value = '';
+                }}
+              />
            </div>
         </div>
 
@@ -403,7 +450,7 @@ export default function TransactionUploadModal({
         )}
 
         <div className="modal-footer" style={{ marginTop: 'var(--sp-6)', display: 'flex', justifyContent: 'flex-end', gap: 'var(--sp-3)' }}>
-           <Button variant="ghost" onClick={onClose}>Batal</Button>
+           <Button variant="ghost" onClick={handleClose}>Batal</Button>
            <Button 
              variant="primary" 
              icon={Save} 

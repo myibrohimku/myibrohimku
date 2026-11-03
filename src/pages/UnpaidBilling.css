@@ -33,6 +33,33 @@
   align-items: center;
 }
 
+.unpaid-filter-row {
+  display: flex;
+  gap: var(--sp-3);
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.unpaid-filter-dropdown {
+  width: 160px;
+  flex-shrink: 0;
+}
+
+@media (max-width: 640px) {
+  .search-filter-bar {
+    flex-wrap: wrap;
+  }
+
+  .unpaid-filter-row {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .unpaid-filter-dropdown {
+    width: 100%;
+  }
+}
+
 .search-icon {
   position: absolute;
   left: var(--sp-3);

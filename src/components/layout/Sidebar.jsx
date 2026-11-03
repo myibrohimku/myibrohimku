@@ -1,7 +1,7 @@
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, Users, ArrowLeftRight, FileText,
-  BarChart3, Settings, LogOut, ChevronLeft
+  BarChart3, Settings, LogOut
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import './Sidebar.css';
@@ -19,7 +19,7 @@ const menuItems = [
   { label: 'Manajemen Pengguna', icon: ShieldAlert, path: '/users', adminOnly: true },
 ];
 
-export default function Sidebar({ expanded, mobileOpen, isMobile, isTablet, onCloseMobile }) {
+export default function Sidebar({ expanded, mobileOpen, isMobile, onCloseMobile }) {
   const { user, logout } = useApp();
   const navigate = useNavigate();
 

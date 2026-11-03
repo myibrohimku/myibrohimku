@@ -69,7 +69,7 @@ export const getCleanFormData = (rawFormData) => {
   cleanData.no_wa_wali = formatWA(cleanData.no_wa_wali);
 
   if (cleanData.rt_rw) {
-    const parts = cleanData.rt_rw.split(/[,\/]/);
+    const parts = cleanData.rt_rw.split(/[,/]/);
     if (parts.length === 2) {
       const rt = parts[0].trim().padStart(3, '0');
       const rw = parts[1].trim().padStart(3, '0');

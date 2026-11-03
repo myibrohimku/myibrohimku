@@ -24,6 +24,7 @@ export default function Login() {
       await login(form.email, form.password);
       navigate('/');
     } catch (err) {
+      console.error('Login gagal:', err);
       setError('Email atau password salah. Pastikan akun Anda sudah terdaftar.');
     } finally {
       setLoading(false);

@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, memo } from 'react';
 import { ChevronDown, Check } from 'lucide-react';
 import './Dropdown.css';
 
-const Dropdown = memo(({ label, options, value, onChange, placeholder = 'Pilih...', multi = false, size = 'md', direction = 'down', disabled = false }) => {
+const Dropdown = memo(({ label, options, value, onChange, placeholder = 'Pilih...', multi = false, size = 'md', direction = 'down', disabled = false, icon: Icon }) => {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 
@@ -45,6 +45,7 @@ const Dropdown = memo(({ label, options, value, onChange, placeholder = 'Pilih..
         type="button"
         disabled={disabled}
       >
+        {Icon && <Icon size={16} className="dropdown__icon" />}
         <span className="dropdown__text">{disabled ? 'Tidak tersedia' : displayText}</span>
         <ChevronDown size={16} className={`dropdown__chevron ${open ? 'dropdown__chevron--open' : ''}`} />
       </button>

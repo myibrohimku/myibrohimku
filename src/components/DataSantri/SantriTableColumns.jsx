@@ -1,4 +1,3 @@
-import React from 'react';
 import Badge from '../ui/Badge';
 
 export const getSantriColumns = (kategoriOptions) => [
@@ -19,7 +18,7 @@ export const getSantriColumns = (kategoriOptions) => [
     }
   },
   {
-    key: 'kategori', label: 'KATEGORI', width: '120px', render: (v, item) => {
+    key: 'kategori', label: 'KATEGORI', width: '120px', render: (v) => {
       const catLabel = kategoriOptions.find(opt => opt.value === v || opt.value === parseInt(v))?.label;
       return <Badge variant="secondary">{catLabel || v || '-'}</Badge>;
     }

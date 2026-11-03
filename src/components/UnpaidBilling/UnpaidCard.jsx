@@ -1,8 +1,6 @@
-import React from 'react';
-import { Send, FileText, ChevronDown, ChevronUp, CheckCircle, Calendar, Tag } from 'lucide-react';
+import { Send, FileText, ChevronDown, ChevronUp, CheckCircle, X } from 'lucide-react';
 import Button from '../ui/Button';
 import Badge from '../ui/Badge';
-import Dropdown from '../ui/Dropdown';
 import { formatRupiah } from '../../data/dummyData';
 
 export default function UnpaidCard({
@@ -11,20 +9,13 @@ export default function UnpaidCard({
   toggleExpand,
   categories,
   categoryPrefix,
-  setCategoryPrefix,
   year,
-  setYear,
-  availableYears,
   handleSendSingleWA,
   handleSendWA,
   handlePrintPDF
 }) {
   const isExpanded = expandedId === item.id;
   const hasDebt = item.totalTunggakan > 0;
-  
-  const yearOptions = availableYears.length > 0 ? availableYears : [
-    { value: new Date().getFullYear(), label: new Date().getFullYear().toString() }
-  ];
 
   return (
     <div 
@@ -44,24 +35,6 @@ export default function UnpaidCard({
             <Badge variant="badge--neutral">{item.kamar}</Badge>
           </div>
           
-          <div className="unpaid-card__filter page-header__actions" style={{ marginBottom: '8px', textAlign: 'left' }} onClick={e => e.stopPropagation()}>
-            <Dropdown
-              options={yearOptions}
-              value={year}
-              onChange={setYear}
-              placeholder="Pilih Tahun"
-              icon={Calendar}
-              disabled={availableYears.length === 0}
-            />
-            <Dropdown
-              options={categories}
-              value={categoryPrefix}
-              onChange={setCategoryPrefix}
-              placeholder="Kategori"
-              icon={Tag}
-            />
-          </div>
-
           <div className="unpaid-card__amount">
             <span className="unpaid-card__total-label">Total Tunggakan:</span>
             <span className="unpaid-card__total-value" style={{ color: hasDebt ? 'var(--red-200)' : (item.hasTarget ? 'var(--green-200)' : 'var(--text-tertiary)') }}>
@@ -89,6 +62,10 @@ export default function UnpaidCard({
                   {m.isCleared ? (
                     <span style={{ color: 'var(--text-tertiary)', fontSize: '0.75rem', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px' }}>
                       <X size={14} /> DIHAPUS
+                    </span>
+                  ) : m.isEmpty ? (
+                    <span style={{ color: 'var(--text-tertiary)', fontSize: '0.75rem', fontWeight: 'bold' }}>
+                      TIDAK ADA TAGIHAN
                     </span>
                   ) : m.isPaid ? (
                     <span style={{ color: 'var(--green-300)', fontSize: '0.75rem', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px' }}>

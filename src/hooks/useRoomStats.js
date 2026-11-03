@@ -48,6 +48,7 @@ export function useRoomStats() {
           .select('santri_id')
           .like('jenis_bayar', 'ld%')
           .eq('nominal', 0)
+          .eq('tahun', new Date().getFullYear())
       ]);
 
       if (santriRes.error) throw santriRes.error;

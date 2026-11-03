@@ -1,11 +1,17 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Bell, AlertCircle, DollarSign, Settings, Check, X } from 'lucide-react';
-import { useNotifications } from '../../hooks/useNotifications';
 import './NotificationPanel.css';
 
-export default function NotificationPanel({ isOpen, onClose }) {
-  const { notifications, readIds, markAsRead, markAllAsRead, loading } = useNotifications();
+export default function NotificationPanel({
+  isOpen,
+  onClose,
+  notifications,
+  readIds,
+  markAsRead,
+  markAllAsRead,
+  loading
+}) {
   const [activeTab, setActiveTab] = useState('semua');
   const navigate = useNavigate();
   const panelRef = useRef(null);

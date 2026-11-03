@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Plus, Search, ArrowUpCircle, ArrowDownCircle, History, RefreshCw, Banknote, CreditCard, FileUp, FileDown, Edit2, Trash2, X, Save } from 'lucide-react';
+import { Plus, Search, ArrowUpCircle, ArrowDownCircle, History, Banknote, CreditCard, FileUp, FileDown, Edit2, Trash2, X, Save } from 'lucide-react';
 import Tabs from '../components/ui/Tabs';
 import Table from '../components/ui/Table';
 import Button from '../components/ui/Button';
@@ -144,17 +144,17 @@ export default function Transactions() {
   }, []); // mount once — safe because we use the ref
 
   // Helper: get label from jenisBayar list
-  const getJenisLabel = (id) => {
+  const getJenisLabel = useCallback((id) => {
     return jenisBayar.find(j => j.id === id)?.label || id;
-  };
+  }, [jenisBayar]);
 
   const getKasirLabel = (id) => {
     return kasirList.find(k => k.id === id)?.label || id;
   };
 
-  const getUrgensiLabel = (id) => {
+  const getUrgensiLabel = useCallback((id) => {
     return urgensiList.find(u => u.id === id)?.label || id;
-  };
+  }, [urgensiList]);
 
   const getSumberLabel = (id, custom) => {
     const found = sumberDanaList.find(s => s.id === id);
@@ -167,27 +167,33 @@ export default function Transactions() {
     const map = new Map();
     incomeData.forEach(item => {
       const key = `${item.santri_id}-${item.created_at}`;
+      const nominal = Number(item.nominal) || 0;
       if (!map.has(key)) {
         map.set(key, {
           ...item,
-          nominal: item.nominal,
+          nominal,
           _is_grouped: true,
           details: [{
             jenis_bayar: item.jenis_bayar,
-            nominal: item.nominal
+            nominal
           }]
         });
       } else {
         const existing = map.get(key);
-        existing.nominal += item.nominal;
+        existing.nominal += nominal;
         existing.details.push({
           jenis_bayar: item.jenis_bayar,
-          nominal: item.nominal
+          nominal
         });
       }
     });
     return Array.from(map.values());
   }, [incomeData]);
+
+  // Semua baris DB yang membentuk satu baris pemasukan gabungan
+  const getIncomeGroup = useCallback((row) => (
+    incomeData.filter(r => r.santri_id === row.santri_id && r.created_at === row.created_at)
+  ), [incomeData]);
 
   // Income columns
   const incomeColumns = [
@@ -281,12 +287,12 @@ export default function Transactions() {
       })),
     ];
     combined.sort((a, b) => {
-      const dateA = a.created_at ? new Date(a.created_at).getTime() : Date.now();
-      const dateB = b.created_at ? new Date(b.created_at).getTime() : Date.now();
-      return dateB - dateA;
+      const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
+      const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
+      return (Number.isNaN(dateB) ? 0 : dateB) - (Number.isNaN(dateA) ? 0 : dateA);
     });
     return combined;
-  }, [groupedIncomeData, outcomeData, jenisBayar, urgensiList]);
+  }, [groupedIncomeData, outcomeData, getJenisLabel, getUrgensiLabel]);
 
   const historyColumns = [
     { key: 'created_at', label: 'Waktu', width: '180px', render: (v) => formatDateTime(v) },
@@ -379,16 +385,12 @@ export default function Transactions() {
   };
 
   const handleRowClick = (row) => {
-    let type = 'income';
-    if (activeTab === 'income') {
-      type = 'income';
-    } else if (activeTab === 'outcome') {
-      type = 'outcome';
-    } else {
-      // History tab
-      type = row._type;
-    }
-    
+    const type = activeTab === 'outcome'
+      ? 'outcome'
+      : activeTab === 'history'
+        ? row._type
+        : 'income';
+
     setSelectedReceiptType(type);
     setSelectedReceiptData(row);
     setIsReceiptOpen(true);
@@ -441,14 +443,69 @@ export default function Transactions() {
 
   const handleEditSave = async () => {
     if (!editRow) return;
+
+    const nominal = Math.round(Number(editFields.nominal) || 0);
+    if (nominal <= 0) {
+      addToast('Nominal harus lebih dari 0!', 'error');
+      return;
+    }
+
     setEditSaving(true);
     try {
-      const table = editType === 'income' ? 'transaksi_pemasukan' : 'transaksi_pengeluaran';
-      const { error } = await supabase
-        .from(table)
-        .update(editFields)
-        .eq('id', editRow.id);
-      if (error) throw error;
+      if (editType === 'income') {
+        const group = getIncomeGroup(editRow);
+        const sharedFields = {
+          metode_bayar: editFields.metode_bayar,
+          sumber_dana_id: editFields.sumber_dana_id,
+          sumber_dana_custom: editFields.sumber_dana_custom,
+          kasir_id: editFields.kasir_id,
+        };
+
+        if (group.length > 1) {
+          // Satu baris tabel = beberapa baris DB (multi pembayaran).
+          // Field bersama diubah untuk semua baris, nominal total dibagi proporsional.
+          const ids = group.map(r => r.id);
+          const { error: sharedError } = await supabase
+            .from('transaksi_pemasukan')
+            .update(sharedFields)
+            .in('id', ids);
+          if (sharedError) throw sharedError;
+
+          const oldTotal = group.reduce((sum, r) => sum + (Number(r.nominal) || 0), 0);
+          if (nominal !== oldTotal) {
+            let allocated = 0;
+            const updates = group.map((r, index) => {
+              const isLast = index === group.length - 1;
+              const rowNominal = isLast
+                ? nominal - allocated
+                : oldTotal > 0
+                  ? Math.floor(((Number(r.nominal) || 0) / oldTotal) * nominal)
+                  : Math.floor(nominal / group.length);
+              allocated += rowNominal;
+              return supabase
+                .from('transaksi_pemasukan')
+                .update({ nominal: Math.max(0, rowNominal) })
+                .eq('id', r.id);
+            });
+            const results = await Promise.all(updates);
+            const failed = results.find(r => r.error);
+            if (failed) throw failed.error;
+          }
+        } else {
+          const { error } = await supabase
+            .from('transaksi_pemasukan')
+            .update({ ...sharedFields, nominal })
+            .eq('id', editRow.id);
+          if (error) throw error;
+        }
+      } else {
+        const { error } = await supabase
+          .from('transaksi_pengeluaran')
+          .update({ ...editFields, nominal })
+          .eq('id', editRow.id);
+        if (error) throw error;
+      }
+
       addToast('Data berhasil diperbarui!', 'success');
       setEditRow(null);
       fetchTransactionsRef.current(true);
@@ -463,12 +520,21 @@ export default function Transactions() {
     if (!deleteRow) return;
     setDeleteLoading(true);
     try {
-      const table = deleteType === 'income' ? 'transaksi_pemasukan' : 'transaksi_pengeluaran';
-      const { error } = await supabase
-        .from(table)
-        .delete()
-        .eq('id', deleteRow.id);
-      if (error) throw error;
+      if (deleteType === 'income') {
+        // Hapus seluruh baris DB dalam grup, bukan hanya baris pertama.
+        const ids = getIncomeGroup(deleteRow).map(r => r.id);
+        const { error } = await supabase
+          .from('transaksi_pemasukan')
+          .delete()
+          .in('id', ids.length > 0 ? ids : [deleteRow.id]);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from('transaksi_pengeluaran')
+          .delete()
+          .eq('id', deleteRow.id);
+        if (error) throw error;
+      }
       addToast('Data berhasil dihapus!', 'success');
       setDeleteRow(null);
       fetchTransactionsRef.current(true);
@@ -479,8 +545,6 @@ export default function Transactions() {
     }
   };
 
-
-  const isLoading = loadingData || masterLoading;
 
   // Baca router state dari Ctrl+I / Ctrl+O shortcut (dikirim oleh Shell.jsx)
   // Setelah dibaca, bersihkan state agar refresh tidak re-trigger form
@@ -504,7 +568,7 @@ export default function Transactions() {
 
     // Hapus state dari history agar refresh tidak membuka form lagi
     navigate('/transactions', { replace: true, state: {} });
-  }, [location.state]);
+  }, [location.state, navigate]);
 
   return (
     <div className="transactions animate-fade-in">
@@ -741,7 +805,11 @@ export default function Transactions() {
         onConfirm={handleDeleteConfirm}
         onCancel={() => setDeleteRow(null)}
         title="Hapus Transaksi"
-        message={`Yakin ingin menghapus transaksi ini? Data yang dihapus tidak dapat dikembalikan.`}
+        message={
+          deleteRow && deleteType === 'income' && getIncomeGroup(deleteRow).length > 1
+            ? `Transaksi ini terdiri dari ${getIncomeGroup(deleteRow).length} pembayaran. Semua baris tersebut akan dihapus dan tidak dapat dikembalikan.`
+            : 'Yakin ingin menghapus transaksi ini? Data yang dihapus tidak dapat dikembalikan.'
+        }
         confirmText={deleteLoading ? 'Menghapus...' : 'Ya, Hapus'}
       />
     </div>

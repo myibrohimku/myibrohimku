@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { useApp } from '../context/AppContext';
-import { Edit2, ShieldAlert, CheckCircle, XCircle, Search, PowerOff, Power, Check } from 'lucide-react';
+import { Edit2, ShieldAlert, Search, PowerOff, Power, Check } from 'lucide-react';
 import Table from '../components/ui/Table';
 import Button from '../components/ui/Button';
 import Modal from '../components/ui/Modal';
@@ -32,11 +32,7 @@ export default function UsersManagement() {
   const [suspendUser, setSuspendUser] = useState(null);
   const [suspendLoading, setSuspendLoading] = useState(false);
 
-  useEffect(() => {
-    fetchUsers();
-  }, []);
-
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     setLoading(true);
     try {
       const { data, error } = await supabase
@@ -52,7 +48,11 @@ export default function UsersManagement() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [addToast]);
+
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
 
   const handleEditClick = (u) => {
     setEditUser(u);
@@ -286,7 +286,7 @@ export default function UsersManagement() {
             : `Apakah Anda yakin ingin mengaktifkan kembali akun ${suspendUser?.nama}? Mereka akan bisa login dan menggunakan aplikasi lagi.`
         }
         confirmText={suspendLoading ? 'Memproses...' : (suspendUser?.is_active ? 'Ya, Cabut Akses' : 'Ya, Aktifkan')}
-        confirmVariant={suspendUser?.is_active ? 'danger' : 'primary'}
+        variant={suspendUser?.is_active ? 'danger' : 'primary'}
       />
     </div>
   );

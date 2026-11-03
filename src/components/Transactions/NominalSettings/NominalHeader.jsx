@@ -1,4 +1,3 @@
-import React from 'react';
 import { ArrowLeft, Check, X, Edit2, Search } from 'lucide-react';
 import Badge from '../../ui/Badge';
 

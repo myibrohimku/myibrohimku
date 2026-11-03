@@ -1,7 +1,7 @@
 import { SearchX } from 'lucide-react';
 import './Table.css';
 
-export default function Table({ columns, data, onSort, sortConfig, actions, onRowClick }) {
+export default function Table({ columns, data, onSort, actions, onRowClick }) {
   return (
     <div className="table-wrapper">
       <table className="table">

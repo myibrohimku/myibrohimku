@@ -85,6 +85,11 @@
   text-overflow: ellipsis;
 }
 
+.dropdown__icon {
+  flex-shrink: 0;
+  color: var(--text-tertiary);
+}
+
 .dropdown__chevron {
   color: var(--text-tertiary);
   transition: transform var(--transition-fast);

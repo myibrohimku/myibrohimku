@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Home, ChevronDown, ChevronUp, Users, UserCheck, UserMinus, BookOpen, RefreshCw } from 'lucide-react';
+import { Home, ChevronDown, ChevronUp, UserCheck, UserMinus, BookOpen, RefreshCw } from 'lucide-react';
 import { useRoomStats } from '../../hooks/useRoomStats';
 import './RoomInfoCard.css';
 

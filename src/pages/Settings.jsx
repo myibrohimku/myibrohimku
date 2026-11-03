@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { User, Lock, Palette, Bell, Save, RefreshCcw, FileText, Database, Trash2, AlertTriangle, CheckSquare, DollarSign, Tag, Send } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { User, Lock, Palette, Bell, Save, FileText, Database, Trash2, AlertTriangle, CheckSquare, DollarSign, Send } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { useTheme } from '../context/ThemeContext';
 import { supabase } from '../lib/supabaseClient';
@@ -8,8 +8,6 @@ import Input from '../components/ui/Input';
 import ImageUploader from '../components/ui/ImageUploader';
 import Badge from '../components/ui/Badge';
 import ConfirmPopup from '../components/ui/ConfirmPopup';
-import NominalSettings from '../components/Transactions/NominalSettings';
-import CategorySettings from '../components/Settings/CategorySettings';
 import TransactionSettings from '../components/Settings/TransactionSettings';
 import './Settings.css';
 
@@ -82,7 +80,7 @@ export default function Settings() {
   const [selectedColumns, setSelectedColumns] = useState([]);
 
   // --- LOGIKA DIRTY CHECK (CEK PERUBAHAN) ---
-  const checkIsDirty = () => {
+  const checkIsDirty = useCallback(() => {
     // Bandingkan state form saat ini dengan data asli dari Context
     const isProfileDirty = profileForm.name !== user.name || profileForm.email !== user.email;
     const isReportDirty = JSON.stringify(reportForm) !== JSON.stringify(reportSettings);
@@ -91,7 +89,7 @@ export default function Settings() {
     const isPasswordDirty = passwordForm.new !== '';
 
     return isProfileDirty || isReportDirty || isWaDirty || isNotifDirty || isPasswordDirty;
-  };
+  }, [profileForm, reportForm, waForm, notifForm, passwordForm, user, reportSettings, waSettings, notifSettings]);
 
   // Gunakan useEffect untuk mencegah refresh/tutup browser saat data belum disimpan
   useEffect(() => {
@@ -103,7 +101,7 @@ export default function Settings() {
     };
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [profileForm, reportForm, waForm, notifForm, passwordForm, user, reportSettings, waSettings, notifSettings]);
+  }, [checkIsDirty]);
 
   const handleTabChange = (newTab) => {
     if (activeTab === newTab) return;
@@ -281,8 +279,10 @@ export default function Settings() {
                     type="email" 
                     value={profileForm.email} 
                     onChange={(e) => setProfileForm({...profileForm, email: e.target.value})} 
+                    disabled
                   />
                 </div>
+                <p className="settings__hint" style={{ marginBottom: 'var(--sp-4)' }}>Email akun tidak dapat diubah dari halaman ini. Hubungi administrator jika perlu mengganti email login.</p>
                 <Button type="submit" icon={Save} disabled={isUpdating}>
                   {isUpdating ? 'Menyimpan...' : 'Simpan Perubahan'}
                 </Button>

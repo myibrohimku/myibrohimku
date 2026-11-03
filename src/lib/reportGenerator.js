@@ -27,7 +27,7 @@ const getExportValue = (item, col, settings = {}) => {
     try {
       const d = new Date(val);
       return isNaN(d.getTime()) ? val : d.toLocaleDateString('id-ID');
-    } catch (e) {
+    } catch {
       return val;
     }
   }
@@ -114,7 +114,7 @@ export const generatePDF = (data, columns, settings = {}) => {
     theme: 'grid',
     headStyles: { fillColor: [40, 40, 40], textColor: 255, fontStyle: 'bold' },
     styles: { fontSize: isLandscape ? 7 : 8, cellPadding: 2 },
-    didDrawPage: (data) => {
+    didDrawPage: () => {
       const str = "Halaman " + doc.internal.getNumberOfPages();
       doc.setFontSize(8);
       doc.text(str, pageWidth - margin - 20, pageHeight - 10);
@@ -150,7 +150,6 @@ export const generatePDF = (data, columns, settings = {}) => {
  * Generate Excel Report for Santri
  */
 export const generateExcel = (data, columns, settings = {}) => {
-  const tableHeaders = columns.map(col => col.label);
   const tableData = data.map((item, index) => {
     const row = {};
     columns.forEach(col => {

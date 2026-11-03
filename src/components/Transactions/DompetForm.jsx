@@ -76,29 +76,37 @@ export default function DompetForm({
   useEffect(() => {
     const fetchBalances = async () => {
       try {
-        // Get total income per jenis
-        const { data: incomeData } = await supabase
+        const yearStart = `${currentYear}-01-01T00:00:00.000Z`;
+        const nextYearStart = `${currentYear + 1}-01-01T00:00:00.000Z`;
+
+        // Get total income per jenis (tahun iuran berjalan)
+        const { data: incomeData, error: incomeError } = await supabase
           .from('transaksi_pemasukan')
           .select('jenis_bayar, nominal')
           .eq('tahun_bayar', currentYear);
+        if (incomeError) throw incomeError;
 
-        // Get total outcome per jenis (from JSONB sumber_dana)
-        const { data: outcomeData } = await supabase
+        // Get total outcome per jenis (hanya tahun berjalan, agar saldo tidak
+        // mengurangi pengeluaran tahun-tahun sebelumnya)
+        const { data: outcomeData, error: outcomeError } = await supabase
           .from('transaksi_pengeluaran')
-          .select('sumber_dana');
+          .select('sumber_dana')
+          .gte('created_at', yearStart)
+          .lt('created_at', nextYearStart);
+        if (outcomeError) throw outcomeError;
 
         // Calculate income totals per jenis
         const incomeTotals = {};
         (incomeData || []).forEach(row => {
-          incomeTotals[row.jenis_bayar] = (incomeTotals[row.jenis_bayar] || 0) + row.nominal;
+          incomeTotals[row.jenis_bayar] = (incomeTotals[row.jenis_bayar] || 0) + (Number(row.nominal) || 0);
         });
 
         // Calculate outcome totals per jenis
         const outcomeTotals = {};
         (outcomeData || []).forEach(row => {
-          const sources = row.sumber_dana || [];
+          const sources = Array.isArray(row.sumber_dana) ? row.sumber_dana : [];
           sources.forEach(s => {
-            outcomeTotals[s.jenis] = (outcomeTotals[s.jenis] || 0) + s.nominal;
+            outcomeTotals[s.jenis] = (outcomeTotals[s.jenis] || 0) + (Number(s.nominal) || 0);
           });
         });
 
@@ -150,12 +158,6 @@ export default function DompetForm({
     }
     return result;
   }, [groupedJenis, balances]);
-
-  const toggleSumber = (jenisId) => {
-    setSelectedSumber(prev =>
-      prev.includes(jenisId) ? prev.filter(s => s !== jenisId) : [...prev, jenisId]
-    );
-  };
 
   // Select all items in a category prefix
   const toggleCategory = (prefix) => {
@@ -231,7 +233,7 @@ export default function DompetForm({
       setSelectedSumber([]);
 
       // Pass the real inserted record to parent → instant table update, no refetch needed
-      onSuccess?.(inserted ?? { ...payload, id: `temp-${Date.now()}` });
+      if (inserted) onSuccess?.(inserted);
     } catch (err) {
       addToast('Gagal menyimpan: ' + err.message, 'error');
     } finally {

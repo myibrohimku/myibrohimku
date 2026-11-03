@@ -9,8 +9,8 @@ import './Navbar.css';
 export default function Navbar({ onToggleSidebar, onQuickTransaction }) {
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const { theme, toggleTheme } = useTheme();
-  const { logoUrl, user, reportSettings } = useApp();
-  const { unreadCount } = useNotifications();
+  const { logoUrl, user } = useApp();
+  const notificationsState = useNotifications();
 
   return (
     <nav className="navbar" id="main-navbar">
@@ -52,14 +52,15 @@ export default function Navbar({ onToggleSidebar, onQuickTransaction }) {
             onClick={() => setIsNotifOpen(!isNotifOpen)}
           >
             <Bell size={20} />
-            {unreadCount > 0 && (
-              <span className="navbar__notif-badge">{unreadCount > 99 ? '99+' : unreadCount}</span>
+            {notificationsState.unreadCount > 0 && (
+              <span className="navbar__notif-badge">{notificationsState.unreadCount > 99 ? '99+' : notificationsState.unreadCount}</span>
             )}
           </button>
 
           <NotificationPanel 
             isOpen={isNotifOpen} 
-            onClose={() => setIsNotifOpen(false)} 
+            onClose={() => setIsNotifOpen(false)}
+            {...notificationsState}
           />
         </div>
 

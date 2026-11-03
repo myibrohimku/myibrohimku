@@ -13,7 +13,7 @@ import Table from '../components/ui/Table';
 import Badge from '../components/ui/Badge';
 import Button from '../components/ui/Button';
 import { useDashboard } from '../hooks/useDashboard';
-import { formatRupiah, formatDate } from '../data/dummyData';
+import { formatRupiah } from '../data/dummyData';
 import './Dashboard.css';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, ChartTooltip, Legend, Filler);

@@ -4,16 +4,27 @@ import { supabase } from '../lib/supabaseClient';
 
 const AppContext = createContext();
 
-// Helper: Mengambil informasi user dari Supabase session
+function readStoredSettings(key, fallback) {
+  try {
+    const saved = localStorage.getItem(key);
+    return saved ? JSON.parse(saved) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+// Helper: Mengambil informasi user dari Supabase session.
+// Jangan pernah memberi role Administrator sebagai fallback: jika profil
+// gagal dimuat, user hanya mendapat hak minimum sampai profil tersedia.
 function mapSession(session) {
   if (!session?.user) return null;
   const u = session.user;
   return {
     id: u.id,
-    name: u.user_metadata?.full_name || u.email?.split('@')[0] || 'Admin',
+    name: u.user_metadata?.full_name || u.email?.split('@')[0] || 'Pengguna',
     email: u.email,
     avatar: u.user_metadata?.avatar_url || null,
-    role: u.user_metadata?.role || 'Administrator',
+    role: u.user_metadata?.role || 'User',
     permissions: [],
     isLoggedIn: true
   };
@@ -35,7 +46,7 @@ export function AppProvider({ children }) {
       }
       
       try {
-        const { data: profile, error } = await supabase
+        const { data: profile } = await supabase
           .from('users_profile')
           .select('*')
           .eq('id', session.user.id)
@@ -115,7 +126,19 @@ export function AppProvider({ children }) {
         }
       });
       if (error) throw error;
-      
+
+      // UI membaca nama dari users_profile, jadi simpan juga ke tabel profil.
+      if (data.name !== undefined) {
+        const { data: { user: authUser } } = await supabase.auth.getUser();
+        if (authUser) {
+          const { error: profileError } = await supabase
+            .from('users_profile')
+            .update({ nama: data.name })
+            .eq('id', authUser.id);
+          if (profileError) throw profileError;
+        }
+      }
+
       setUser(prev => ({ ...prev, ...data }));
     } catch (err) {
       console.error('Gagal update profil:', err.message);
@@ -136,35 +159,26 @@ export function AppProvider({ children }) {
     return localStorage.getItem('myibrohim-logo') || logoDefault;
   });
 
-  const [reportSettings, setReportSettings] = useState(() => {
-    const saved = localStorage.getItem('myibrohim-report-settings');
-    return saved ? JSON.parse(saved) : {
-      namaInstansi: 'Asrama Sayyid Ibrohim Utara',
-      alamatInstansi: 'Sekretariat : Komplek Doktren Al Kahfi Somalangu Po Box 32 Kebumen 54317 Jawa Tengah',
-      namaAdmin: 'ADMINISTRATOR',
-      jabatanAdmin: 'Sekretaris',
-      logo: null
-    };
-  });
+  const [reportSettings, setReportSettings] = useState(() => readStoredSettings('myibrohim-report-settings', {
+    namaInstansi: 'Asrama Sayyid Ibrohim Utara',
+    alamatInstansi: 'Sekretariat : Komplek Doktren Al Kahfi Somalangu Po Box 32 Kebumen 54317 Jawa Tengah',
+    namaAdmin: 'ADMINISTRATOR',
+    jabatanAdmin: 'Sekretaris',
+    logo: null
+  }));
 
-  const [waSettings, setWaSettings] = useState(() => {
-    const saved = localStorage.getItem('myibrohim-wa-settings');
-    return saved ? JSON.parse(saved) : {
-      namaKasir: 'MUHAMMAD ZIDNI RAMADHANI',
-      jabatan: 'BENDAHARA',
-      noRekening: 'BRI 3086 0103 4428 534\nMUHAMMAD ZIDTNI RAMADHANI\n(TIDAK MENERIMA TITIP UANG SANTRI)'
-    };
-  });
+  const [waSettings, setWaSettings] = useState(() => readStoredSettings('myibrohim-wa-settings', {
+    namaKasir: 'MUHAMMAD ZIDNI RAMADHANI',
+    jabatan: 'BENDAHARA',
+    noRekening: 'BRI 3086 0103 4428 534\nMUHAMMAD ZIDTNI RAMADHANI\n(TIDAK MENERIMA TITIP UANG SANTRI)'
+  }));
 
-  const [notifSettings, setNotifSettings] = useState(() => {
-    const saved = localStorage.getItem('myibrohim-notif-settings');
-    return saved ? JSON.parse(saved) : {
-      tunggakan: true,
-      anomali: true,
-      sistem: true,
-      email: true
-    };
-  });
+  const [notifSettings, setNotifSettings] = useState(() => readStoredSettings('myibrohim-notif-settings', {
+    tunggakan: true,
+    anomali: true,
+    sistem: true,
+    email: true
+  }));
 
   const [toasts, setToasts] = useState([]);
 
@@ -195,9 +209,14 @@ export function AppProvider({ children }) {
         }
       }
     } catch (err) {
-      console.warn('Gagal mengambil pengaturan dari database, menggunakan data lokal.');
+      console.warn('Gagal mengambil pengaturan dari database, menggunakan data lokal.', err);
     }
   }, []);
+
+  // Muat pengaturan dari database setelah user terautentikasi (RLS).
+  useEffect(() => {
+    if (user?.isLoggedIn) fetchReportSettings();
+  }, [user?.isLoggedIn, fetchReportSettings]);
 
   const updateReportSettings = useCallback(async (newSettings) => {
     setReportSettings(prev => {
@@ -277,7 +296,12 @@ export function AppProvider({ children }) {
           if (error) throw error;
           
           setLogoUrl(dataUrl);
-          localStorage.setItem('myibrohim-logo', dataUrl);
+          try {
+            localStorage.setItem('myibrohim-logo', dataUrl);
+          } catch {
+            // Logo base64 bisa melebihi kuota localStorage; state & database tetap tersimpan.
+            console.warn('Logo terlalu besar untuk disimpan di localStorage.');
+          }
           resolve(dataUrl);
         } catch (err) {
           reject(err);
@@ -290,15 +314,17 @@ export function AppProvider({ children }) {
 
   const resetLogo = useCallback(async () => {
     try {
-      await supabase.from('ref_settings').upsert({
+      const { error } = await supabase.from('ref_settings').upsert({
         id: 1,
         logo_url: null,
         updated_at: new Date()
       });
+      if (error) throw error;
       setLogoUrl(logoDefault);
       localStorage.removeItem('myibrohim-logo');
     } catch (err) {
       console.error('Gagal reset logo:', err.message);
+      throw err;
     }
   }, []);
 

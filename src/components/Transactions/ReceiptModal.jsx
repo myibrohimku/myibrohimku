@@ -1,7 +1,7 @@
-import React, { useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
-import { Download, CheckCircle, ArrowUpCircle, X, Banknote, CreditCard } from 'lucide-react';
+import { Download, CheckCircle, ArrowUpCircle, X } from 'lucide-react';
 import Modal from '../ui/Modal';
 import Button from '../ui/Button';
 import './ReceiptModal.css';
@@ -54,7 +54,7 @@ export default function ReceiptModal({
   // ─── Transaction ID ───
   // Income: NIA * date_number
   // Outcome: DB id * date_number
-  let transactionId = '-';
+  let transactionId;
   if (isIncome) {
     const nia = Number(data.databasesantri?.nia) || 0;
     const dateNum = formatIdDateNum(data.created_at);
@@ -68,7 +68,6 @@ export default function ReceiptModal({
   // ─── Tahun Pelajaran ───
   // Uses tahun_bayar from the record (set in PaymentForm from NominalSettings year)
   const tahunBayar = data.tahun_bayar || new Date(data.created_at).getFullYear();
-  const tahunPelajaranStr = `${tahunBayar}/${tahunBayar + 1}`;
 
   // ─── Kategori (Income only) ───
   const kategori = (() => {

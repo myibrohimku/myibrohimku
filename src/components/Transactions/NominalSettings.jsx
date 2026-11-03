@@ -1,4 +1,3 @@
-import React from 'react';
 import { Loader2, Save } from 'lucide-react';
 import Button from '../ui/Button';
 import './NominalSettings.css';

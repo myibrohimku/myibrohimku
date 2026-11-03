@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Trash2, Download, AlertTriangle, ShieldCheck, Database, ChevronDown } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Trash2, Download, AlertTriangle, Database } from 'lucide-react';
 import Button from '../ui/Button';
 import Badge from '../ui/Badge';
 import Input from '../ui/Input';
@@ -22,6 +22,11 @@ export default function TransactionMaintenance() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [hasBackedUp, setHasBackedUp] = useState(false);
 
+  // Konfigurasi berubah = backup sebelumnya tidak lagi mencakup target yang akan dihapus
+  useEffect(() => {
+    setHasBackedUp(false);
+  }, [target, range]);
+
   const handleBackup = async () => {
     try {
       addToast('Menyiapkan file backup...', 'info');
@@ -29,11 +34,13 @@ export default function TransactionMaintenance() {
       const fetchAll = async () => {
         const results = {};
         if (target === 'income' || target === 'all') {
-          const { data } = await supabase.from('transaksi_pemasukan').select('*, databasesantri(nama, nia)');
+          const { data, error } = await supabase.from('transaksi_pemasukan').select('*, databasesantri(nama, nia)');
+          if (error) throw error;
           results.income = data || [];
         }
         if (target === 'outcome' || target === 'all') {
-          const { data } = await supabase.from('transaksi_pengeluaran').select('*');
+          const { data, error } = await supabase.from('transaksi_pengeluaran').select('*');
+          if (error) throw error;
           results.outcome = data || [];
         }
         return results;
@@ -60,12 +67,11 @@ export default function TransactionMaintenance() {
   };
 
   const getThresholdDate = () => {
-    const now = new Date();
-    if (range === 'day') return new Date(now.setDate(now.getDate() - 1)).toISOString();
-    if (range === 'week') return new Date(now.setDate(now.getDate() - 7)).toISOString();
-    if (range === 'month') return new Date(now.setMonth(now.getMonth() - 1)).toISOString();
-    if (range === 'year') return new Date(now.setFullYear(now.getFullYear() - 1)).toISOString();
-    return null; // all time
+    // Selisih hari tetap, bukan setMonth/setFullYear, agar akhir bulan
+    // (mis. 31 Maret) tidak bergeser ke bulan berikutnya.
+    const days = { day: 1, week: 7, month: 30, year: 365 }[range];
+    if (!days) return null;
+    return new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
   };
 
   const handleExecute = async () => {

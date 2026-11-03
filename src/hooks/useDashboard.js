@@ -38,14 +38,14 @@ export function useDashboard() {
           .from('transaksi_pemasukan')
           .select('nominal, created_at')
           .gte('created_at', `${year}-01-01T00:00:00`)
-          .lte('created_at', `${year}-12-31T23:59:59`),
+          .lt('created_at', `${year + 1}-01-01T00:00:00`),
 
         // Pengeluaran per bulan untuk tahun terpilih
         supabase
           .from('transaksi_pengeluaran')
           .select('nominal, created_at')
           .gte('created_at', `${year}-01-01T00:00:00`)
-          .lte('created_at', `${year}-12-31T23:59:59`),
+          .lt('created_at', `${year + 1}-01-01T00:00:00`),
 
         // Tagihan belum lunas (nominal_santri vs transaksi_pemasukan)
         supabase
@@ -108,8 +108,11 @@ export function useDashboard() {
 
         let unpaidSantriSet = new Set();
         let totalUnpaid = 0;
+        // Jangan hitung tagihan milik santri yang sudah dihapus (soft delete)
+        const activeSantriIds = new Set((resSantri.data || []).map(s => s.id));
 
         resUnpaid.data.forEach(n => {
+          if (!activeSantriIds.has(n.santri_id)) return;
           const jid = (n.jenis_bayar || '').toLowerCase();
           const key = `${n.santri_id}-${jid}`;
           const paid = paymentsMap[key] || 0;
@@ -158,7 +161,7 @@ export function useDashboard() {
     } finally {
       setLoading(false);
     }
-  }, [year]);
+  }, [year, currentYear]);
 
   useEffect(() => {
     fetchAll();

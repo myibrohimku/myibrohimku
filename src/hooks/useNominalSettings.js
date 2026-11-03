@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../lib/supabaseClient';
 
 const MONTHS = [
@@ -174,8 +174,12 @@ export function useNominalSettings(highlightedPrefix) {
         const criteriaPart = match[1];
         const newValue = parseInputToNumber(match[2]);
         const filters = criteriaPart.split(';').map(f => f.trim().toLowerCase()).filter(f => f !== '');
-        
+
         if (filters.length === 0) return;
+        if (newValue === '' || isNaN(newValue)) {
+          alert('Nilai nominal pada rumus tidak valid. Gunakan angka, contoh: =INSERT{kriteria = 150000}');
+          return;
+        }
 
         // BUG FIX #1: Jika ada santri yang dicentang (checkedSantriIds),
         // prioritaskan hanya santri yang dicentang DAN cocok filter.
@@ -235,8 +239,7 @@ export function useNominalSettings(highlightedPrefix) {
     // Simpan raw string ke bulkInput agar 0 tidak tampil kosong
     const sanitized = value.replace(/[^0-9]/g, '');
     setBulkInput(prev => ({ ...prev, [monthId]: sanitized }));
-    const numValue = sanitized === '' ? '' : parseInt(sanitized, 10);
-    
+
     if (checkedSantriIds.size === 0) return;
 
     // BUG FIX #2: Hanya update santri yang dicentang DAN masih ada di filteredSantri

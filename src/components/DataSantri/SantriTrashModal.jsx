@@ -1,4 +1,3 @@
-import React from 'react';
 import { Trash, RotateCcw, X } from 'lucide-react';
 import Modal from '../ui/Modal';
 import Button from '../ui/Button';

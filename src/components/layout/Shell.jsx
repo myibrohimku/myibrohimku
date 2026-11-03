@@ -12,7 +12,6 @@ export default function Shell({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const [isTablet, setIsTablet] = useState(false);
 
   const { refetch } = useMasterTransaksi();
 
@@ -20,7 +19,6 @@ export default function Shell({ children }) {
     const handleResize = () => {
       const w = window.innerWidth;
       setIsMobile(w < 768);
-      setIsTablet(w >= 768 && w <= 1024);
       if (w < 768) {
         setSidebarOpen(false);
       } else if (w <= 1024) {
@@ -86,7 +84,6 @@ export default function Shell({ children }) {
           expanded={sidebarOpen}
           mobileOpen={mobileMenuOpen}
           isMobile={isMobile}
-          isTablet={isTablet}
           onCloseMobile={closeMobileMenu}
         />
         {mobileMenuOpen && isMobile && (

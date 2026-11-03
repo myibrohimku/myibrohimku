@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import {
-  BarChart3, Download, RefreshCw, TrendingUp, TrendingDown,
-  DollarSign, PieChart, Activity, CheckCircle2
+  Download, RefreshCw, TrendingUp, TrendingDown,
+  Activity, CheckCircle2
 } from 'lucide-react';
 import { Bar } from 'react-chartjs-2';
 import {
@@ -9,11 +9,8 @@ import {
   CategoryScale, LinearScale, BarElement,
   Title, Tooltip as ChartTooltip, Legend
 } from 'chart.js';
-import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import Dropdown from '../components/ui/Dropdown';
-import Badge from '../components/ui/Badge';
-import Table from '../components/ui/Table';
 import { supabase } from '../lib/supabaseClient';
 import { formatRupiah } from '../data/dummyData';
 import './Reports.css';
@@ -51,8 +48,6 @@ export default function Reports() {
 
   const [incomeRaw,   setIncomeRaw]   = useState([]);
   const [outcomeRaw,  setOutcomeRaw]  = useState([]);
-  const [topItems,    setTopItems]    = useState([]);
-  const [topOutItems, setTopOutItems] = useState([]);
   const [jenisBayarMap, setJenisBayarMap] = useState({}); // id → label
   const [yearOptions, setYearOptions] = useState([{ value: currentYear, label: String(currentYear) }]);
   const [loading, setLoading] = useState(true);
@@ -60,41 +55,35 @@ export default function Reports() {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const [resIncome, resOutcome, resYears, resTopIncome, resTopOutcome, resJenis] = await Promise.all([
+      // Rentang tahun: [1 Jan tahun ini, 1 Jan tahun depan) agar 31 Desember
+      // setelah pukul 00:00 tetap ikut terhitung.
+      const yearStart = `${year}-01-01`;
+      const nextYearStart = `${year + 1}-01-01`;
+
+      const [resIncome, resOutcome, resYears, resJenis] = await Promise.all([
         supabase
           .from('transaksi_pemasukan')
           .select('nominal, created_at, jenis_bayar')
-          .gte('created_at', `${year}-01-01`)
-          .lte('created_at', `${year}-12-31`),
+          .gte('created_at', yearStart)
+          .lt('created_at', nextYearStart),
 
         supabase
           .from('transaksi_pengeluaran')
           .select('nominal, created_at, deskripsi, urgensi_id')
-          .gte('created_at', `${year}-01-01`)
-          .lte('created_at', `${year}-12-31`),
+          .gte('created_at', yearStart)
+          .lt('created_at', nextYearStart),
 
         supabase.from('nominal_santri').select('tahun'),
-
-        // Top kontribusi jenis bayar (pemasukan)
-        supabase
-          .from('transaksi_pemasukan')
-          .select('jenis_bayar, nominal')
-          .gte('created_at', `${year}-01-01`)
-          .lte('created_at', `${year}-12-31`),
-
-        // Top pengeluaran per deskripsi
-        supabase
-          .from('transaksi_pengeluaran')
-          .select('deskripsi, nominal')
-          .gte('created_at', `${year}-01-01`)
-          .lte('created_at', `${year}-12-31`),
 
         // Master jenis bayar — untuk resolve ID ke label
         supabase.from('ref_transak_bln').select('id_transak_bln, label_transak_bln'),
       ]);
 
-      if (resIncome.data)  setIncomeRaw(resIncome.data);
-      if (resOutcome.data) setOutcomeRaw(resOutcome.data);
+      if (resIncome.error) throw resIncome.error;
+      if (resOutcome.error) throw resOutcome.error;
+
+      setIncomeRaw(resIncome.data || []);
+      setOutcomeRaw(resOutcome.data || []);
 
       // Build jenis bayar lookup map: id → label
       const jenisBayarLookup = {};
@@ -103,35 +92,6 @@ export default function Reports() {
           jenisBayarLookup[j.id_transak_bln] = j.label_transak_bln;
         });
         setJenisBayarMap(jenisBayarLookup);
-      }
-
-      // Top jenis bayar (pemasukan) — resolve ID ke label
-      if (resTopIncome.data) {
-        const map = {};
-        resTopIncome.data.forEach(t => {
-          const rawId = t.jenis_bayar || 'Lainnya';
-          const key   = jenisBayarLookup[rawId] || rawId; // tampilkan label jika ada
-          map[key] = (map[key] || 0) + Number(t.nominal || 0);
-        });
-        const sorted = Object.entries(map)
-          .map(([jenis, total]) => ({ jenis, total }))
-          .sort((a, b) => b.total - a.total)
-          .slice(0, 5);
-        setTopItems(sorted);
-      }
-
-      // Top deskripsi pengeluaran
-      if (resTopOutcome.data) {
-        const map = {};
-        resTopOutcome.data.forEach(t => {
-          const key = t.deskripsi || 'Lainnya';
-          map[key] = (map[key] || 0) + Number(t.nominal || 0);
-        });
-        const sorted = Object.entries(map)
-          .map(([deskripsi, total]) => ({ deskripsi, total }))
-          .sort((a, b) => b.total - a.total)
-          .slice(0, 5);
-        setTopOutItems(sorted);
       }
 
       if (resYears.data) {
@@ -161,6 +121,21 @@ export default function Reports() {
     const m = parseInt(month, 10);
     return outcomeRaw.filter(t => new Date(t.created_at).getMonth() === m);
   }, [outcomeRaw, month]);
+
+  // Top jenis pemasukan dihitung dari data yang sudah difilter bulan,
+  // supaya persentasenya konsisten dengan total pemasukan yang ditampilkan.
+  const topItems = useMemo(() => {
+    const map = {};
+    filteredIncome.forEach(t => {
+      const rawId = t.jenis_bayar || 'Lainnya';
+      const key = jenisBayarMap[rawId] || rawId;
+      map[key] = (map[key] || 0) + Number(t.nominal || 0);
+    });
+    return Object.entries(map)
+      .map(([jenis, total]) => ({ jenis, total }))
+      .sort((a, b) => b.total - a.total)
+      .slice(0, 5);
+  }, [filteredIncome, jenisBayarMap]);
 
   // ── Agregasi per bulan ───────────────────────────────────────────────────
   const chartByMonth = useMemo(() => {

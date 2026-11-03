@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { Upload, X, Image } from 'lucide-react';
+import { Upload, X } from 'lucide-react';
 import './ImageUploader.css';
 
 export default function ImageUploader({ label, value, onChange, onRemove, accept = 'image/*', maxSize = 2 }) {

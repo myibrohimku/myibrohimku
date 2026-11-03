@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { Edit2, Trash2, Database } from 'lucide-react';
+import { Edit2, Trash2 } from 'lucide-react';
 import { generatePDF, generateExcel } from '../lib/reportGenerator';
 import { useApp } from '../context/AppContext';
 import { supabase } from '../lib/supabaseClient';
@@ -209,21 +209,21 @@ export default function DataSantri() {
 
   const generateNextNIA = async () => {
     try {
-      const { data: lastEntry, error } = await supabase
+      // NIA disimpan sebagai TEXT: ordering descending secara leksikografis
+      // salah ketika panjang digit berbeda ("9999" > "10001"), jadi ambil
+      // semua nilai lalu cari maksimum numeriknya.
+      const { data: rows, error } = await supabase
         .from('databasesantri')
-        .select('nia')
-        .order('nia', { ascending: false })
-        .limit(1);
+        .select('nia');
 
       if (error) throw error;
 
-      if (lastEntry && lastEntry.length > 0) {
-        const lastNia = parseInt(lastEntry[0].nia);
-        if (!isNaN(lastNia)) {
-          return (lastNia + 1).toString();
-        }
-      }
-      return '10001';
+      let maxNia = 10000;
+      (rows || []).forEach(row => {
+        const value = parseInt(row.nia, 10);
+        if (!Number.isNaN(value) && value > maxNia) maxNia = value;
+      });
+      return String(maxNia + 1);
     } catch (err) {
       console.error('Error generating NIA:', err);
       return null;

@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Download, Upload, Save, X } from 'lucide-react';
+import { useState } from 'react';
+import { Download, Save, X } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import Modal from '../ui/Modal';
 import Button from '../ui/Button';
@@ -7,6 +7,24 @@ import Badge from '../ui/Badge';
 import { supabase } from '../../lib/supabaseClient';
 import { sanitizeString, getCleanFormData } from './santriUtils';
 import './SantriUploadModal.css';
+
+// Excel menyimpan tanggal sebagai serial number; konversi ke YYYY-MM-DD agar
+// tidak tersimpan sebagai angka mentah ("45000") di kolom date.
+const parseDateValue = (val) => {
+  if (val === undefined || val === null || val === '') return null;
+  if (val instanceof Date) {
+    if (isNaN(val.getTime())) return null;
+    return `${val.getFullYear()}-${String(val.getMonth() + 1).padStart(2, '0')}-${String(val.getDate()).padStart(2, '0')}`;
+  }
+  if (typeof val === 'number') {
+    if (!isFinite(val)) return null;
+    const ms = Math.round((val - 25569) * 86400 * 1000);
+    const d = new Date(ms);
+    if (isNaN(d.getTime())) return null;
+    return d.toISOString().slice(0, 10);
+  }
+  return String(val).trim() || null;
+};
 
 export default function SantriUploadModal({
   isOpen,
@@ -101,7 +119,34 @@ export default function SantriUploadModal({
         const wb = XLSX.read(bstr, { type: 'binary' });
         const wsname = wb.SheetNames[0];
         const ws = wb.Sheets[wsname];
-        const data = XLSX.utils.sheet_to_json(ws);
+        const rows = XLSX.utils.sheet_to_json(ws);
+
+        // NIA adalah kunci upsert. Baris tanpa NIA dan NIA ganda harus dibuang
+        // agar tidak memicu "ON CONFLICT DO UPDATE affects row a second time".
+        const dedupedRows = new Map();
+        let skippedWithoutNia = 0;
+        let duplicateCount = 0;
+        rows.forEach(row => {
+          const rowNia = row.nia !== undefined && row.nia !== null ? row.nia.toString().trim() : '';
+          if (!rowNia) {
+            if (row.nama) skippedWithoutNia++;
+            return;
+          }
+          if (dedupedRows.has(rowNia)) duplicateCount++;
+          dedupedRows.set(rowNia, { ...row, nia: rowNia });
+        });
+        const data = Array.from(dedupedRows.values());
+
+        if (data.length === 0) {
+          alert('File tidak berisi baris dengan NIA yang valid.');
+          return;
+        }
+        if (skippedWithoutNia > 0 || duplicateCount > 0) {
+          alert(
+            `${skippedWithoutNia > 0 ? `${skippedWithoutNia} baris tanpa NIA dilewati. ` : ''}` +
+            `${duplicateCount > 0 ? `${duplicateCount} NIA ganda digabung (baris terakhir dipakai).` : ''}`
+          );
+        }
 
         // Fetch existing data for merging
         const nias = data.map(r => r.nia?.toString().trim()).filter(Boolean);
@@ -116,7 +161,7 @@ export default function SantriUploadModal({
                     .select('*')
                     .in('nia', chunk);
                 if (existingData) {
-                    existingData.forEach(item => existingMap.set(item.nia?.toString(), item));
+                    existingData.forEach(item => existingMap.set(item.nia?.toString().trim(), item));
                 }
             }
         }
@@ -139,7 +184,7 @@ export default function SantriUploadModal({
               nisn: getValue(row.nisn?.toString().trim(), existing.nisn, null),
               nik: getValue(row.nik?.toString().trim(), existing.nik, null),
               tempat_lahir: sanitizeString(row.tempat_lahir) || existing.tempat_lahir || '',
-              tanggal_lahir: getValue(row.tanggal_lahir?.toString(), existing.tanggal_lahir, null),
+              tanggal_lahir: getValue(parseDateValue(row.tanggal_lahir), existing.tanggal_lahir, null),
               kamar_id: row.kamar_id ? parseInt(row.kamar_id) : (existing.kamar_id || null),
               status_id: row.status_id ? parseInt(row.status_id) : (existing.status_id || null),
               kategori: (row.kategori_id || row.kategori) ? parseInt(row.kategori_id || row.kategori) : (existing.kategori || null),
@@ -176,7 +221,7 @@ export default function SantriUploadModal({
           });
 
         setUploadDataPreview(sanitizedData);
-      } catch (err) {
+      } catch {
         alert("Gagal membaca file Excel. Pastikan formatnya sesuai template.");
       } finally {
         setIsParsing(false);
@@ -195,11 +240,14 @@ export default function SantriUploadModal({
     if (uploadDataPreview.length === 0) return;
     try {
       setUploading(true);
-      const { error } = await supabase
-        .from('databasesantri')
-        .upsert(uploadDataPreview, { onConflict: 'nia' });
-
-      if (error) throw error;
+      const CHUNK_SIZE = 500;
+      for (let i = 0; i < uploadDataPreview.length; i += CHUNK_SIZE) {
+        const chunk = uploadDataPreview.slice(i, i + CHUNK_SIZE);
+        const { error } = await supabase
+          .from('databasesantri')
+          .upsert(chunk, { onConflict: 'nia' });
+        if (error) throw error;
+      }
       alert(`Berhasil memproses ${uploadDataPreview.length} data santri (Update/Tambah)!`);
       onSuccess();
       setUploadDataPreview([]);
@@ -235,7 +283,10 @@ export default function SantriUploadModal({
             <input
               type="file"
               accept=".xlsx, .xls"
-              onChange={handleFileUpload}
+              onChange={(e) => {
+                handleFileUpload(e);
+                e.target.value = '';
+              }}
               className="file-input-custom"
               disabled={isParsing}
             />

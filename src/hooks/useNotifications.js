@@ -6,8 +6,13 @@ export function useNotifications() {
   const { notifSettings } = useApp();
   const [notifications, setNotifications] = useState([]);
   const [readIds, setReadIds] = useState(() => {
-    const saved = localStorage.getItem('myibrohim-notif-reads');
-    return saved ? JSON.parse(saved) : [];
+    try {
+      const saved = localStorage.getItem('myibrohim-notif-reads');
+      const parsed = saved ? JSON.parse(saved) : [];
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
   });
   const [loading, setLoading] = useState(true);
 

@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { DollarSign, X, Save, AlertTriangle, Banknote, CreditCard } from 'lucide-react';
+import { DollarSign, X, Save, Banknote, CreditCard } from 'lucide-react';
 import SmartSearch from '../ui/SmartSearch';
 import NominalInput from '../ui/NominalInput';
 import Button from '../ui/Button';
@@ -33,9 +33,7 @@ export default function PaymentForm({
   const [metodeBayar, setMetodeBayar] = useState(null);
   const [paidAmounts, setPaidAmounts] = useState({});
   const [targetNominals, setTargetNominals] = useState({});
-  const [smartNominal, setSmartNominal] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [excessAmount, setExcessAmount] = useState(0);
   const { addToast } = useApp();
 
   const currentYear = new Date().getFullYear();
@@ -91,15 +89,24 @@ export default function PaymentForm({
   }, [selectedSantri, selectedYear]);
 
   // Reset jenis & nominals when year changes
-  const handleYearChange = (delta) => {
+  const handleYearChange = (delta, force = false) => {
     const nextYear = selectedYear + delta;
-    // Safety check: only allow if santri selected and year is available
-    if (selectedSantri && !availableYears.includes(nextYear)) return;
+    // Safety check: hanya tahun yang punya pengaturan nominal, kecuali reset paksa
+    if (!force && selectedSantri && !availableYears.includes(nextYear)) return;
 
     setSelectedYear(nextYear);
     setSelectedJenis([]);
     setNominals({});
     setPaidAmounts({});
+  };
+
+  // Ganti santri harus mereset jenis & nominal agar tidak memakai nilai santri sebelumnya
+  const handleSantriChange = (santri) => {
+    setSelectedSantri(santri);
+    setSelectedJenis([]);
+    setNominals({});
+    setPaidAmounts({});
+    setTargetNominals({});
   };
 
   const handleAddJenis = useCallback((opt) => {
@@ -122,29 +129,6 @@ export default function PaymentForm({
 
   const handleNominalChange = (jenisId, value) => {
     setNominals(prev => ({ ...prev, [jenisId]: value }));
-    setSmartNominal('');
-  };
-
-  const handleSmartNominalChange = (total) => {
-    setSmartNominal(total);
-    let remaining = total;
-    let currentSelected = [...selectedJenis];
-    const newNominals = { ...nominals };
-    currentSelected.forEach(j => {
-      const jid = (j.id || '').toLowerCase();
-      const paid = paidAmounts[jid] || 0;
-      const target = targetNominals[jid] || 0;
-      const isLunas = target > 0 && paid >= target;
-      const isCleared = target === -1;
-      if (isLunas || isCleared) return;
-      const remainingTarget = target > 0 ? target - paid : 0;
-      const allocation = remainingTarget > 0 ? Math.min(remaining, remainingTarget) : 0;
-      newNominals[j.id] = allocation;
-      remaining -= allocation;
-    });
-    setExcessAmount(remaining);
-    setSelectedJenis(currentSelected);
-    setNominals(newNominals);
   };
 
   const getSumberKode = (id) => sumberDanaList.find(s => s.id === id)?.kode || 'orangtua';
@@ -163,26 +147,38 @@ export default function PaymentForm({
     if (!selectedKasir) return addToast('Pilih Kasir yang bertugas!', 'error');
     if (!sId) return addToast('Pilih Sumber Dana terlebih dahulu!', 'error');
     if (!mId) return addToast('Pilih Metode Pembayaran terlebih dahulu!', 'error');
+
+    const records = selectedJenis.filter(j => {
+      const jid = (j.id || '').toLowerCase();
+      const paid = paidAmounts[jid] || 0;
+      const target = targetNominals[jid] || 0;
+      const isLunas = target > 0 && paid >= target;
+      const isCleared = target === -1;
+      return !isLunas && !isCleared;
+    }).map(j => ({
+      santri_id: selectedSantri.santri_id,
+      jenis_bayar: j.id,
+      nominal: Math.round(Number(nominals[j.id]) || 0),
+      kasir_id: selectedKasir.id,
+      sumber_dana_id: sId,
+      sumber_dana_custom: getSumberKode(sId) === 'lainnya' ? (sumberDanaCustom || 'Lainnya') : null,
+      metode_bayar: mId,
+      tahun_bayar: selectedYear,
+      created_at: new Date().toISOString(),
+    })).filter(r => r.nominal > 0);
+
+    // Jangan pernah mengirim insert kosong atau nominal nol
+    if (records.length === 0) {
+      return addToast(
+        selectedJenis.length > 0
+          ? 'Nominal pembayaran harus lebih dari 0!'
+          : 'Semua jenis pembayaran yang dipilih sudah lunas atau dihapus.',
+        'error'
+      );
+    }
+
     setSubmitting(true);
     try {
-      const records = selectedJenis.filter(j => {
-        const jid = (j.id || '').toLowerCase();
-        const paid = paidAmounts[jid] || 0;
-        const target = targetNominals[jid] || 0;
-        const isLunas = target > 0 && paid >= target;
-        const isCleared = target === -1;
-        return !isLunas && !isCleared;
-      }).map(j => ({
-        santri_id: selectedSantri.santri_id,
-        jenis_bayar: j.id,
-        nominal: nominals[j.id],
-        kasir_id: selectedKasir.id,
-        sumber_dana_id: sId,
-        sumber_dana_custom: getSumberKode(sId) === 'lainnya' ? (sumberDanaCustom || 'Lainnya') : null,
-        metode_bayar: mId,
-        tahun_bayar: selectedYear,
-        created_at: new Date().toISOString(),
-      }));
       const { data: inserted, error } = await supabase
         .from('transaksi_pemasukan')
         .insert(records)
@@ -219,7 +215,7 @@ export default function PaymentForm({
           label="Nama / NIA Pembayar"
           options={santriList}
           value={selectedSantri}
-          onChange={setSelectedSantri}
+          onChange={handleSantriChange}
           onConfirm={() => jenisRef.current?.querySelector('input')?.focus()}
         />
 
@@ -251,7 +247,7 @@ export default function PaymentForm({
               <button
                 type="button"
                 className="payment-form__year-reset"
-                onClick={() => handleYearChange(currentYear - selectedYear)}
+                onClick={() => handleYearChange(currentYear - selectedYear, true)}
                 title="Kembali ke tahun ini"
               >Sekarang</button>
             )}
@@ -286,7 +282,7 @@ export default function PaymentForm({
           </div>
         )}
 
-        {selectedJenis.map((j, idx) => {
+        {selectedJenis.map((j) => {
           const jid = (j.id || '').toLowerCase();
           const paid = paidAmounts[jid] || 0;
           const target = targetNominals[jid] || 0;

@@ -16,6 +16,7 @@ export default function UnpaidBilling() {
     loading,
     year, setYear,
     categoryPrefix, setCategoryPrefix,
+    statusFilter, setStatusFilter,
     searchQuery, setSearchQuery,
     categories,
     availableYears,
@@ -143,6 +144,14 @@ export default function UnpaidBilling() {
       <UnpaidToolbar
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
+        statusFilter={statusFilter}
+        setStatusFilter={setStatusFilter}
+        categories={categories}
+        categoryPrefix={categoryPrefix}
+        setCategoryPrefix={setCategoryPrefix}
+        year={year}
+        setYear={setYear}
+        availableYears={availableYears}
         handlePrintBulkPDF={handlePrintBulkPDF}
       />
 
@@ -162,10 +171,7 @@ export default function UnpaidBilling() {
                 toggleExpand={toggleExpand}
                 categories={categories}
                 categoryPrefix={categoryPrefix}
-                setCategoryPrefix={setCategoryPrefix}
                 year={year}
-                setYear={setYear}
-                availableYears={availableYears}
                 handleSendSingleWA={handleSendSingleWA}
                 handleSendWA={handleSendWA}
                 handlePrintPDF={handlePrintPDF}
