@@ -42,6 +42,12 @@
   flex-wrap: wrap;
 }
 
+/* Lebar tetap agar posisi dropdown tidak bergeser saat ganti pilihan. */
+.reports__filter-row .dropdown {
+  width: 180px;
+  flex-shrink: 0;
+}
+
 .reports__filter-summary {
   display: flex;
   flex-direction: column;
@@ -408,6 +414,9 @@
   .reports__filter-row {
     flex-direction: column;
     align-items: stretch;
+  }
+  .reports__filter-row .dropdown {
+    width: 100%;
   }
   .reports__filter-summary {
     margin-left: 0;

@@ -17,6 +17,12 @@
   gap: var(--sp-2);
 }
 
+/* Lebar tetap agar posisi dropdown tidak bergeser saat ganti pilihan. */
+.dashboard__header-actions .dropdown {
+  width: 160px;
+  flex-shrink: 0;
+}
+
 .page-title {
   font-size: 1.65rem;
   font-weight: 800;
@@ -311,6 +317,14 @@
 @media (max-width: 767px) {
   .dashboard__stats {
     grid-template-columns: 1fr;
+  }
+
+  .dashboard__header-actions {
+    width: 100%;
+  }
+  .dashboard__header-actions .dropdown {
+    width: 100%;
+    flex: 1;
   }
 
   .dashboard__chart-header {

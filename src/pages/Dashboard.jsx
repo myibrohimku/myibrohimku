@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { Wallet, TrendingUp, TrendingDown, Users, AlertCircle, RefreshCw, ArrowUpRight, ArrowDownRight, Activity } from 'lucide-react';
+import { Wallet, TrendingUp, TrendingDown, Users, AlertCircle, RefreshCw, ArrowUpRight, ArrowDownRight, Activity, Tag, Calendar } from 'lucide-react';
 import RoomInfoCard from '../components/ui/RoomInfoCard';
 import { Line } from 'react-chartjs-2';
 import {
@@ -19,6 +19,19 @@ import './Dashboard.css';
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, ChartTooltip, Legend, Filler);
 
 const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+const MONTH_LABELS_FULL = [
+  'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+  'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+];
+const MONTH_OPTIONS = [
+  { value: 'all', label: 'Semua Bulan' },
+  { value: '0',  label: 'Januari' },   { value: '1',  label: 'Februari' },
+  { value: '2',  label: 'Maret' },     { value: '3',  label: 'April' },
+  { value: '4',  label: 'Mei' },       { value: '5',  label: 'Juni' },
+  { value: '6',  label: 'Juli' },      { value: '7',  label: 'Agustus' },
+  { value: '8',  label: 'September' }, { value: '9',  label: 'Oktober' },
+  { value: '10', label: 'November' },  { value: '11', label: 'Desember' },
+];
 
 const formatDateTime = (str) => {
   if (!str) return '-';
@@ -33,13 +46,13 @@ const formatTrend = (value) => {
   return (num >= 0 ? '+' : '') + num + '%';
 };
 
-/** Cari bulan dengan nilai tertinggi */
-const getPeakMonth = (arr) => {
+/** Cari titik dengan nilai tertinggi pada data grafik */
+const getPeak = (arr) => {
   if (!arr || arr.length === 0) return null;
   const max = Math.max(...arr);
   if (max === 0) return null;
   const idx = arr.indexOf(max);
-  return { label: MONTH_LABELS[idx], value: max };
+  return { index: idx, value: max };
 };
 
 export default function Dashboard() {
@@ -47,12 +60,23 @@ export default function Dashboard() {
     loading,
     year,
     setYear,
+    month,
+    setMonth,
     availableYears,
+    categories,
+    categoryFilter,
+    setCategoryFilter,
     stats,
     chartByMonth,
+    chartData,
     recentTransactions,
     refetch,
   } = useDashboard();
+
+  const activeCategoryLabel =
+    categoryFilter === 'all'
+      ? null
+      : categories.find((c) => c.value === categoryFilter)?.label;
 
   const yearOptions = useMemo(() => {
     if (!availableYears || availableYears.length === 0) {
@@ -61,28 +85,39 @@ export default function Dashboard() {
     return availableYears;
   }, [availableYears]);
 
-  // Rasio keuangan
+  // Rasio keuangan (kartu & grafik menyajikan periode yang sama)
   const spendingRatio = stats.totalIncome > 0
     ? Math.round((stats.totalOutcome / stats.totalIncome) * 100)
     : 0;
 
-  const unpaidPercent = stats.totalIncome > 0
-    ? Math.min(100, Math.round((stats.unpaidTotal / stats.totalIncome) * 100))
+  // Tunggakan bersifat tahunan — rasionya terhadap total pemasukan SETAHUN.
+  const unpaidPercent = stats.annualIncome > 0
+    ? Math.min(100, Math.round((stats.unpaidTotal / stats.annualIncome) * 100))
     : 0;
 
   const trendIncome = formatTrend(stats.incomeTrend);
 
-  // Bulan puncak pemasukan & pengeluaran
-  const peakIncome  = useMemo(() => getPeakMonth(chartByMonth.income),  [chartByMonth.income]);
-  const peakOutcome = useMemo(() => getPeakMonth(chartByMonth.outcome), [chartByMonth.outcome]);
+  const isMonthView = month !== 'all';
+  const monthViewLabel = isMonthView
+    ? `${MONTH_LABELS_FULL[parseInt(month, 10)]} ${year}`
+    : null;
+
+  // Titik puncak pemasukan & pengeluaran (mengikuti skala grafik yang tampil)
+  const isDailyView = chartData.granularity === 'day';
+  const peakIncome  = useMemo(() => getPeak(chartData.income),  [chartData.income]);
+  const peakOutcome = useMemo(() => getPeak(chartData.outcome), [chartData.outcome]);
+  const formatPeakLabel = (p) =>
+    p ? (isDailyView ? `Tgl ${p.index + 1}` : MONTH_LABELS[p.index]) : null;
 
   // Jumlah bulan aktif (ada transaksi)
   const activeMonths = useMemo(() => {
     return (chartByMonth.income || []).filter(v => v > 0).length;
   }, [chartByMonth.income]);
 
-  // Rata-rata pemasukan bulanan (hanya bulan aktif)
-  const avgMonthlyIncome = activeMonths > 0 ? Math.round(stats.totalIncome / activeMonths) : 0;
+  // Rata-rata pemasukan bulanan (hanya bulan aktif) — khusus tampilan tahunan
+  const avgMonthlyIncome = !isMonthView && activeMonths > 0
+    ? Math.round(stats.totalIncome / activeMonths)
+    : 0;
 
   const recentColumns = [
     {
@@ -110,11 +145,11 @@ export default function Dashboard() {
   ];
 
   const lineChartData = {
-    labels: chartByMonth.labels,
+    labels: chartData.labels,
     datasets: [
       {
         label: 'Pemasukan',
-        data: chartByMonth.income,
+        data: chartData.income,
         borderColor: '#22c55e',
         backgroundColor: 'rgba(34, 197, 94, 0.08)',
         fill: false,
@@ -126,7 +161,7 @@ export default function Dashboard() {
       },
       {
         label: 'Pengeluaran',
-        data: chartByMonth.outcome,
+        data: chartData.outcome,
         borderColor: '#ef4444',
         backgroundColor: 'rgba(239, 68, 68, 0.08)',
         fill: false,
@@ -177,20 +212,46 @@ export default function Dashboard() {
           <h1 className="page-title">Dashboard</h1>
           <p className="page-subtitle">
             Ringkasan keuangan &amp; data pesantren — Tahun {year}
-            {!loading && activeMonths > 0 && (
+            {!loading && activeMonths > 0 && !isMonthView && (
               <span className="dashboard__subtitle-pill">
                 {activeMonths} bulan aktif
+              </span>
+            )}
+            {!loading && isMonthView && (
+              <span className="dashboard__subtitle-pill">
+                {MONTH_LABELS_FULL[parseInt(month, 10)]} {year}
+              </span>
+            )}
+            {!loading && activeCategoryLabel && (
+              <span className="dashboard__subtitle-pill">
+                {activeCategoryLabel}
               </span>
             )}
           </p>
         </div>
         <div className="dashboard__header-actions">
           <Dropdown
+            icon={Tag}
+            options={categories}
+            value={categoryFilter}
+            onChange={setCategoryFilter}
+            size="sm"
+            placeholder="Kategori"
+          />
+          <Dropdown
             options={yearOptions}
             value={year}
             onChange={(v) => setYear(Number(v))}
             size="sm"
             placeholder="Tahun"
+          />
+          <Dropdown
+            icon={Calendar}
+            options={MONTH_OPTIONS}
+            value={month}
+            onChange={setMonth}
+            size="sm"
+            placeholder="Bulan"
           />
           <Button variant="ghost" icon={RefreshCw} onClick={refetch} size="sm" title="Refresh">
             Refresh
@@ -211,7 +272,7 @@ export default function Dashboard() {
           {!loading && (
             <div className="stat-card__meta">
               <span className={stats.saldo >= 0 ? 'meta--positive' : 'meta--negative'}>
-                {stats.saldo >= 0 ? 'Surplus' : 'Defisit'} tahun {year}
+                {stats.saldo >= 0 ? 'Surplus' : 'Defisit'} {isMonthView ? monthViewLabel : `tahun ${year}`}
               </span>
             </div>
           )}
@@ -231,6 +292,11 @@ export default function Dashboard() {
               <span className="meta--neutral">
                 Rata-rata {formatRupiah(avgMonthlyIncome)}/bln
               </span>
+            </div>
+          )}
+          {!loading && isMonthView && (
+            <div className="stat-card__meta">
+              <span className="meta--neutral">{stats.incomeTxCount} transaksi</span>
             </div>
           )}
         </StatCard>
@@ -276,20 +342,23 @@ export default function Dashboard() {
         <div className="card card--padded dashboard__chart-card">
           <div className="dashboard__chart-header">
             <h3 className="dashboard__section-title">
-              Grafik Keuangan {year}
+              Grafik Keuangan {month === 'all'
+                ? year
+                : `${MONTH_LABELS_FULL[parseInt(month, 10)]} ${year}`}
+              {isDailyView && <span className="dashboard__subtitle-pill">skala harian</span>}
             </h3>
             {!loading && (peakIncome || peakOutcome) && (
               <div className="dashboard__chart-peaks">
                 {peakIncome && (
                   <span className="dashboard__peak dashboard__peak--income">
                     <ArrowUpRight size={13} />
-                    Puncak masuk: {peakIncome.label} ({formatRupiah(peakIncome.value)})
+                    Puncak masuk: {formatPeakLabel(peakIncome)} ({formatRupiah(peakIncome.value)})
                   </span>
                 )}
                 {peakOutcome && (
                   <span className="dashboard__peak dashboard__peak--outcome">
                     <ArrowDownRight size={13} />
-                    Puncak keluar: {peakOutcome.label} ({formatRupiah(peakOutcome.value)})
+                    Puncak keluar: {formatPeakLabel(peakOutcome)} ({formatRupiah(peakOutcome.value)})
                   </span>
                 )}
               </div>
@@ -370,7 +439,7 @@ export default function Dashboard() {
           </div>
         ) : recentTransactions.length === 0 ? (
           <p style={{ color: 'var(--text-tertiary)', textAlign: 'center', padding: '2rem 0' }}>
-            Belum ada transaksi di tahun {year}
+            Tidak ada transaksi yang cocok dengan filter kategori aktif
           </p>
         ) : (
           <Table columns={recentColumns} data={recentTransactions} />

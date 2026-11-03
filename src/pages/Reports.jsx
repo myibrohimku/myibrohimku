@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   Download, RefreshCw, TrendingUp, TrendingDown,
-  Activity, CheckCircle2
+  Activity, CheckCircle2, Tag
 } from 'lucide-react';
 import { Bar } from 'react-chartjs-2';
 import {
@@ -34,6 +34,20 @@ const MONTH_OPTIONS = [
 
 const currentYear = new Date().getFullYear();
 
+/** 'ld07' → 'ld' */
+const prefixOf = (jenis) => {
+  const m = String(jenis || '').toLowerCase().match(/^[a-z]+/);
+  return m ? m[0] : null;
+};
+
+/** 'Kas Asrama Januari' → 'Kas Asrama' */
+const deriveCategoryLabel = (label) => {
+  if (!label) return '';
+  const parts = String(label).trim().split(/\s+/);
+  if (parts.length > 1) parts.pop();
+  return parts.join(' ');
+};
+
 /** Format angka singkat: 1.500.000 → 1,5jt */
 const formatShort = (v) => {
   if (v >= 1_000_000_000) return `${(v / 1_000_000_000).toFixed(1)}M`;
@@ -45,10 +59,12 @@ const formatShort = (v) => {
 export default function Reports() {
   const [year,  setYear]  = useState(currentYear);
   const [month, setMonth] = useState('all');
+  const [category, setCategory] = useState('all');
 
   const [incomeRaw,   setIncomeRaw]   = useState([]);
   const [outcomeRaw,  setOutcomeRaw]  = useState([]);
   const [jenisBayarMap, setJenisBayarMap] = useState({}); // id → label
+  const [catOptions, setCatOptions] = useState([{ value: 'all', label: 'Semua Kategori' }]);
   const [yearOptions, setYearOptions] = useState([{ value: currentYear, label: String(currentYear) }]);
   const [loading, setLoading] = useState(true);
 
@@ -67,15 +83,31 @@ export default function Reports() {
           .gte('created_at', yearStart)
           .lt('created_at', nextYearStart),
 
+        // sumber_dana dibutuhkan untuk memfilter pengeluaran per kategori tagihan.
         supabase
           .from('transaksi_pengeluaran')
-          .select('nominal, created_at, deskripsi, urgensi_id')
+          .select('nominal, created_at, deskripsi, urgensi_id, sumber_dana')
           .gte('created_at', yearStart)
           .lt('created_at', nextYearStart),
 
-        supabase.from('nominal_santri').select('tahun'),
+        // Batas min/max tahun — lebih murah daripada mengambil seluruh kolom tahun.
+        (async () => {
+          const [minRes, maxRes] = await Promise.all([
+            supabase.from('nominal_santri').select('tahun').order('tahun', { ascending: true }).limit(1),
+            supabase.from('nominal_santri').select('tahun').order('tahun', { ascending: false }).limit(1),
+          ]);
+          if (minRes.error) throw minRes.error;
+          if (maxRes.error) throw maxRes.error;
+          const lo = Math.min(minRes.data?.[0]?.tahun ?? currentYear, currentYear);
+          const hi = Math.max(maxRes.data?.[0]?.tahun ?? currentYear, currentYear);
+          const years = [];
+          for (let y = hi; y >= lo; y--) years.push(y);
+          return years;
+        })(),
 
-        // Master jenis bayar — untuk resolve ID ke label
+        // Master jenis bayar — untuk resolve ID ke label sekaligus daftar
+        // kategori tagihan aktif (prefix yang sudah dihapus dari master,
+        // mis. GL/WF, tidak pernah tampil di filter maupun hitungan).
         supabase.from('ref_transak_bln').select('id_transak_bln, label_transak_bln'),
       ]);
 
@@ -85,19 +117,26 @@ export default function Reports() {
       setIncomeRaw(resIncome.data || []);
       setOutcomeRaw(resOutcome.data || []);
 
-      // Build jenis bayar lookup map: id → label
+      // Build jenis bayar lookup map: id → label, plus kategori (per prefix).
       const jenisBayarLookup = {};
+      const catMap = new Map();
       if (resJenis.data) {
         resJenis.data.forEach(j => {
           jenisBayarLookup[j.id_transak_bln] = j.label_transak_bln;
+          const prefix = prefixOf(j.id_transak_bln);
+          if (prefix && !catMap.has(prefix)) {
+            catMap.set(prefix, deriveCategoryLabel(j.label_transak_bln) || prefix.toUpperCase());
+          }
         });
         setJenisBayarMap(jenisBayarLookup);
+        setCatOptions([
+          { value: 'all', label: 'Semua Kategori' },
+          ...[...catMap.entries()].map(([value, label]) => ({ value, label })),
+        ]);
       }
 
-      if (resYears.data) {
-        const years = [...new Set(resYears.data.map(d => d.tahun))].sort((a, b) => b - a);
-        if (!years.includes(currentYear)) years.unshift(currentYear);
-        setYearOptions(years.map(y => ({ value: y, label: String(y) })));
+      if (Array.isArray(resYears)) {
+        setYearOptions(resYears.map(y => ({ value: y, label: String(y) })));
       }
 
     } catch (err) {
@@ -109,18 +148,42 @@ export default function Reports() {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
-  // ── Filter by month ──────────────────────────────────────────────────────
+  // ── Filter by kategori tagihan (hanya kategori aktif dari master) ───────
+  const refPrefixes = useMemo(
+    () => new Set(catOptions.filter((c) => c.value !== 'all').map((c) => c.value)),
+    [catOptions]
+  );
+
+  const catIncome = useMemo(() => {
+    return incomeRaw.filter((t) => {
+      const p = prefixOf(t.jenis_bayar);
+      return !!p && refPrefixes.has(p) && (category === 'all' || p === category);
+    });
+  }, [incomeRaw, refPrefixes, category]);
+
+  // Pengeluaran masuk kategori bila salah satu alokasi sumber_dana-nya berasal
+  // dari prefix kategori yang aktif.
+  const catOutcome = useMemo(() => {
+    return outcomeRaw.filter((t) =>
+      (Array.isArray(t.sumber_dana) ? t.sumber_dana : []).some((s) => {
+        const p = prefixOf(s.jenis);
+        return !!p && refPrefixes.has(p) && (category === 'all' || p === category);
+      })
+    );
+  }, [outcomeRaw, refPrefixes, category]);
+
+  // ── Filter by month (di atas hasil filter kategori) ─────────────────────
   const filteredIncome = useMemo(() => {
-    if (month === 'all') return incomeRaw;
+    if (month === 'all') return catIncome;
     const m = parseInt(month, 10);
-    return incomeRaw.filter(t => new Date(t.created_at).getMonth() === m);
-  }, [incomeRaw, month]);
+    return catIncome.filter(t => new Date(t.created_at).getMonth() === m);
+  }, [catIncome, month]);
 
   const filteredOutcome = useMemo(() => {
-    if (month === 'all') return outcomeRaw;
+    if (month === 'all') return catOutcome;
     const m = parseInt(month, 10);
-    return outcomeRaw.filter(t => new Date(t.created_at).getMonth() === m);
-  }, [outcomeRaw, month]);
+    return catOutcome.filter(t => new Date(t.created_at).getMonth() === m);
+  }, [catOutcome, month]);
 
   // Top jenis pemasukan dihitung dari data yang sudah difilter bulan,
   // supaya persentasenya konsisten dengan total pemasukan yang ditampilkan.
@@ -137,20 +200,46 @@ export default function Reports() {
       .slice(0, 5);
   }, [filteredIncome, jenisBayarMap]);
 
-  // ── Agregasi per bulan ───────────────────────────────────────────────────
+  // ── Agregasi per bulan (mengikuti filter kategori, bukan filter bulan) ──
   const chartByMonth = useMemo(() => {
     const inc = Array(12).fill(0);
     const out = Array(12).fill(0);
-    incomeRaw.forEach(t => {
+    catIncome.forEach(t => {
       const m = new Date(t.created_at).getMonth();
       if (!isNaN(m)) inc[m] += Number(t.nominal || 0);
     });
-    outcomeRaw.forEach(t => {
+    catOutcome.forEach(t => {
       const m = new Date(t.created_at).getMonth();
       if (!isNaN(m)) out[m] += Number(t.nominal || 0);
     });
     return { income: inc, outcome: out };
-  }, [incomeRaw, outcomeRaw]);
+  }, [catIncome, catOutcome]);
+
+  // ── Data grafik bervariabel: bulanan (Semua) atau harian (bulan dipilih) ──
+  const chartData = useMemo(() => {
+    if (month === 'all') {
+      return {
+        labels: MONTH_LABELS,
+        income: chartByMonth.income,
+        outcome: chartByMonth.outcome,
+        granularity: 'month',
+      };
+    }
+    const m = parseInt(month, 10);
+    const daysInMonth = new Date(year, m + 1, 0).getDate();
+    const labels = Array.from({ length: daysInMonth }, (_, i) => String(i + 1));
+    const inc = Array(daysInMonth).fill(0);
+    const out = Array(daysInMonth).fill(0);
+    catIncome.forEach(t => {
+      const d = new Date(t.created_at);
+      if (!isNaN(d) && d.getMonth() === m) inc[d.getDate() - 1] += Number(t.nominal || 0);
+    });
+    catOutcome.forEach(t => {
+      const d = new Date(t.created_at);
+      if (!isNaN(d) && d.getMonth() === m) out[d.getDate() - 1] += Number(t.nominal || 0);
+    });
+    return { labels, income: inc, outcome: out, granularity: 'day' };
+  }, [month, year, catIncome, catOutcome, chartByMonth]);
 
   // ── Stat totals ──────────────────────────────────────────────────────────
   const totalIncome  = filteredIncome.reduce((s, t)  => s + Number(t.nominal || 0), 0);
@@ -180,18 +269,18 @@ export default function Reports() {
 
   // ── Bar chart ────────────────────────────────────────────────────────────
   const barData = {
-    labels: MONTH_LABELS,
+    labels: chartData.labels,
     datasets: [
       {
         label: 'Pemasukan',
-        data: chartByMonth.income,
+        data: chartData.income,
         backgroundColor: 'rgba(74, 0, 255, 0.75)',
         borderRadius: 6,
         borderSkipped: false,
       },
       {
         label: 'Pengeluaran',
-        data: chartByMonth.outcome,
+        data: chartData.outcome,
         backgroundColor: 'rgba(239, 68, 68, 0.75)',
         borderRadius: 6,
         borderSkipped: false,
@@ -234,13 +323,14 @@ export default function Reports() {
     },
   };
 
-  // ── Export CSV ───────────────────────────────────────────────────────────
+  // ── Export CSV (mengikuti skala grafik yang tampil) ──────────────────────
   const handleExport = useCallback(() => {
+    const isDaily = chartData.granularity === 'day';
     const rows = [
-      ['Bulan', 'Pemasukan', 'Pengeluaran', 'Net'],
-      ...MONTH_LABELS.map((label, i) => {
-        const inc = chartByMonth.income[i];
-        const out = chartByMonth.outcome[i];
+      [isDaily ? 'Tanggal' : 'Bulan', 'Pemasukan', 'Pengeluaran', 'Net'],
+      ...chartData.labels.map((label, i) => {
+        const inc = chartData.income[i];
+        const out = chartData.outcome[i];
         return [label, inc, out, inc - out];
       }),
       ['TOTAL', totalIncome, totalOutcome, surplus],
@@ -253,12 +343,16 @@ export default function Reports() {
     a.download = `laporan_keuangan_${year}${month !== 'all' ? `_bln${parseInt(month, 10) + 1}` : ''}.csv`;
     a.click();
     URL.revokeObjectURL(url);
-  }, [chartByMonth, year, month, totalIncome, totalOutcome, surplus]);
+  }, [chartData, year, month, totalIncome, totalOutcome, surplus]);
 
   // ── Label periode ─────────────────────────────────────────────────────────
   const periodLabel = month === 'all'
     ? `Tahun ${year}`
     : `${MONTH_OPTIONS.find(m2 => m2.value === month)?.label} ${year}`;
+  const categoryLabel = category === 'all'
+    ? null
+    : catOptions.find((c) => c.value === category)?.label;
+  const fullPeriodLabel = categoryLabel ? `${categoryLabel} · ${periodLabel}` : periodLabel;
 
   const isMonthView = month !== 'all';
 
@@ -269,7 +363,7 @@ export default function Reports() {
           <h1 className="page-title">Laporan Keuangan</h1>
           <p className="page-subtitle">
             Analisis pemasukan &amp; pengeluaran —&nbsp;
-            <strong>{periodLabel}</strong>
+            <strong>{fullPeriodLabel}</strong>
             {!loading && activeMonths > 0 && !isMonthView && (
               <span className="reports__subtitle-pill">{activeMonths} bulan aktif</span>
             )}
@@ -289,6 +383,13 @@ export default function Reports() {
       <div className="card card--padded reports__filter">
         <div className="reports__filter-row">
           <Dropdown
+            icon={Tag}
+            label="Kategori"
+            options={catOptions}
+            value={category}
+            onChange={setCategory}
+          />
+          <Dropdown
             label="Tahun"
             options={yearOptions}
             value={year}
@@ -300,12 +401,12 @@ export default function Reports() {
             value={month}
             onChange={setMonth}
           />
-          {!loading && (
-            <div className="reports__filter-summary">
-              <span>Menampilkan data</span>
-              <strong>{periodLabel}</strong>
-            </div>
-          )}
+          {/* Tetap dirender saat loading agar tinggi kartu filter (dan posisi
+              elemen di bawahnya) tidak melompat saat refresh. */}
+          <div className="reports__filter-summary">
+            <span>Menampilkan data</span>
+            <strong>{loading ? '...' : fullPeriodLabel}</strong>
+          </div>
         </div>
       </div>
 
@@ -375,7 +476,7 @@ export default function Reports() {
         <div className="card card--padded reports__chart">
           <div className="reports__chart-header">
             <h3 className="dashboard__section-title" style={{ marginBottom: 0 }}>
-              Perbandingan Bulanan {year}
+              Perbandingan {month === 'all' ? 'Bulanan' : 'Harian'} — {fullPeriodLabel}
             </h3>
             {!loading && peakIncomeMonth && !isMonthView && (
               <span className="reports__peak-badge">
